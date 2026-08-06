@@ -261,8 +261,8 @@ export default function App() {
   // Trigger Discord OAuth Login
   const handleDiscordLogin = () => {
     if (typeof window === 'undefined') return;
-    const redirectUri = window.location.origin + window.location.pathname;
-    const oauthUrl = `https://discord.com/oauth2/authorize?client_id=${BOT_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=identify%20guilds`;
+    const redirectUri = window.location.origin;
+    const oauthUrl = `https://discord.com/oauth2/authorize?client_id=${BOT_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=identify%20guilds`;
     window.location.href = oauthUrl;
   };
 
