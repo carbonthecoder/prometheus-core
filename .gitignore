@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+*/.env
+*/.env.*
+!*/.env.example
+
+# Next.js build files
+.next/
+*/.next/
+out/
+*/out/
+
+# Logs & Runtime
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pids/
+*.pid
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Archives & Temporary
+*.zip
+*.tar.gz
+*.tgz
+backups/
+*.dump

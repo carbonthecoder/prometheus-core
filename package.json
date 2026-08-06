@@ -1,0 +1,29 @@
+{
+  "name": "prometheus-discord-bot-suite",
+  "version": "2.0.0",
+  "description": "Production-ready Discord Bot with 96 Slash Commands, 24/7 HD Music, AutoMod, Tickets, Economy, Leveling, and Next.js Web Dashboard",
+  "main": "bot/TitanBot-main/src/app.js",
+  "scripts": {
+    "install:all": "npm --prefix \"bot/TitanBot-main\" install && npm --prefix \"dashboard\" install",
+    "bot": "npm --prefix \"bot/TitanBot-main\" start",
+    "dashboard": "npm --prefix \"dashboard\" start -- -p 3001",
+    "build": "npm --prefix \"dashboard\" run build",
+    "test": "npm --prefix \"bot/TitanBot-main\" test",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:logs": "pm2 logs"
+  },
+  "keywords": [
+    "discord-bot",
+    "discord-js",
+    "nextjs",
+    "dashboard",
+    "music-bot",
+    "moderation-bot",
+    "automod",
+    "economy-bot",
+    "leveling-bot"
+  ],
+  "author": "Prometheus Team",
+  "license": "MIT"
+}
