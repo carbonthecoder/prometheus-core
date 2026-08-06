@@ -1,13 +1,76 @@
 import { logger } from './logger.js';
+import fs from 'fs';
+import path from 'path';
 
 /**
- * In-memory storage fallback for when database is unavailable
- * Used when PostgreSQL connection fails
+ * High-Performance Storage Engine with Atomic File Persistence
+ * Used for local testing and lightweight deployments, while seamlessly upgrading to PostgreSQL when available.
  */
 class MemoryStorage {
     constructor() {
         this.data = new Map();
         this.expirationTimes = new Map();
+        this.storageDir = path.resolve(process.cwd(), 'data');
+        this.storageFile = path.join(this.storageDir, 'storage.json');
+        this.saveTimeout = null;
+        this.isSaving = false;
+        
+        // Initialize and load saved state from disk
+        this.initDiskStorage();
+    }
+
+    initDiskStorage() {
+        try {
+            if (!fs.existsSync(this.storageDir)) {
+                fs.mkdirSync(this.storageDir, { recursive: true });
+            }
+
+            if (fs.existsSync(this.storageFile)) {
+                const raw = fs.readFileSync(this.storageFile, 'utf8');
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    for (const [k, v] of Object.entries(parsed.data || {})) {
+                        this.data.set(k, v);
+                    }
+                    for (const [k, v] of Object.entries(parsed.expirations || {})) {
+                        if (v > Date.now()) {
+                            this.expirationTimes.set(k, v);
+                        }
+                    }
+                    logger.info(`[Storage] Loaded ${this.data.size} persistent keys from local database storage.`);
+                }
+            }
+        } catch (err) {
+            logger.warn(`[Storage] Could not load disk cache, starting with clean memory: ${err.message}`);
+        }
+    }
+
+    scheduleDiskSync() {
+        if (this.saveTimeout) return;
+        this.saveTimeout = setTimeout(() => {
+            this.saveTimeout = null;
+            this.flushToDisk();
+        }, 1000); // 1-second debounce for ultra-high throughput
+    }
+
+    flushToDisk() {
+        try {
+            if (!fs.existsSync(this.storageDir)) {
+                fs.mkdirSync(this.storageDir, { recursive: true });
+            }
+
+            const exportObj = {
+                data: Object.fromEntries(this.data),
+                expirations: Object.fromEntries(this.expirationTimes),
+                lastSaved: new Date().toISOString()
+            };
+
+            const tempFile = `${this.storageFile}.tmp`;
+            fs.writeFileSync(tempFile, JSON.stringify(exportObj, null, 2), 'utf8');
+            fs.renameSync(tempFile, this.storageFile);
+        } catch (err) {
+            logger.error(`[Storage] Error persisting to local disk: ${err.message}`);
+        }
     }
 
     async get(key, defaultValue = null) {
@@ -18,6 +81,7 @@ class MemoryStorage {
             if (Date.now() > expirationTime) {
                 this.data.delete(key);
                 this.expirationTimes.delete(key);
+                this.scheduleDiskSync();
                 return defaultValue;
             }
         }
@@ -30,14 +94,18 @@ class MemoryStorage {
         
         if (ttl && ttl > 0) {
             this.expirationTimes.set(key, Date.now() + (ttl * 1000));
+        } else {
+            this.expirationTimes.delete(key);
         }
         
+        this.scheduleDiskSync();
         return true;
     }
 
     async delete(key) {
         this.data.delete(key);
         this.expirationTimes.delete(key);
+        this.scheduleDiskSync();
         return true;
     }
 
@@ -67,6 +135,7 @@ class MemoryStorage {
             if (Date.now() > expirationTime) {
                 this.data.delete(key);
                 this.expirationTimes.delete(key);
+                this.scheduleDiskSync();
                 return false;
             }
         }
@@ -91,10 +160,9 @@ class MemoryStorage {
     async clear() {
         this.data.clear();
         this.expirationTimes.clear();
+        this.flushToDisk();
         return true;
     }
 }
 
 export { MemoryStorage };
-
-
