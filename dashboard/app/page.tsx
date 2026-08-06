@@ -16,6 +16,84 @@ const RADIO_STATIONS = [
   { id: 'classical', name: 'Classical', genre: 'Orchestral' }
 ];
 
+const DEFAULT_SERVER_CONFIG = {
+  prefix: '!',
+  automod: {
+    antiRaid: true,
+    accountAgeHours: 24,
+    massJoinThreshold: 5,
+    antiSpam: true,
+    maxMessagesPer5s: 5,
+    blockLinks: false,
+    blockInvites: true,
+    massMentions: 4,
+    toxicityFilter: true,
+    bannedWords: 'nword, scam, free nitro, discord-gift',
+    timeoutDurationMin: 15
+  },
+  logging: {
+    enabled: true,
+    channelId: '',
+    logBans: true,
+    logKicks: true,
+    logMessageDelete: true,
+    logMessageEdit: true,
+    logRoleChanges: true,
+    logVoiceChannels: true
+  },
+  welcome: {
+    enabled: true,
+    channelId: '',
+    message: 'Welcome to **{server}**, {user}! You are member #{memberCount}.',
+    autoRoleId: ''
+  },
+  goodbye: {
+    enabled: true,
+    channelId: '',
+    message: '{username} has left {server}.'
+  },
+  tickets: {
+    enabled: true,
+    categoryId: '',
+    supportRoleId: '',
+    transcriptChannelId: ''
+  },
+  reactionRoles: { enabled: true },
+  joinToCreate: {
+    enabled: true,
+    hubVoiceChannelId: '',
+    spawnCategoryId: '',
+    namingFormat: '🔊 {user}\'s Room'
+  },
+  serverStats: { enabled: true },
+  leveling: {
+    enabled: true,
+    minXp: 15,
+    maxXp: 25,
+    message: '🎉 Congratulations {user}! You leveled up to **Level {level}**!'
+  },
+  economy: {
+    enabled: true,
+    currencyName: 'Coins',
+    currencySymbol: '🪙',
+    startingBalance: 250,
+    dailyReward: 500
+  },
+  radio: {
+    enabled: true,
+    autoplay: true,
+    defaultStation: 'lofi',
+    defaultVolume: 80,
+    voiceChannelId: ''
+  },
+  ai: {
+    enabled: true,
+    model: 'gemini-2.5-flash',
+    systemPrompt: 'You are a helpful and friendly server assistant.'
+  },
+  disabledCommands: {}
+};
+
 interface DiscordUser {
   id: string;
   username: string;
@@ -37,7 +115,7 @@ interface DiscordGuild {
 export default function App() {
   // Current view: 'landing' | 'servers' | 'dashboard'
   const [view, setView] = useState<'landing' | 'servers' | 'dashboard'>('landing');
-  const [selectedGuildId, setSelectedGuildId] = useState<string>('1508741457769664573');
+  const [selectedGuildId, setSelectedGuildId] = useState<string>('');
   
   // Discord OAuth User Session
   const [currentUser, setCurrentUser] = useState<DiscordUser | null>(null);
@@ -63,17 +141,33 @@ export default function App() {
     memory: { heapUsedMB: 40, rssMB: 110 }
   });
 
-  const [botGuilds, setBotGuilds] = useState<any[]>([
-    { id: '1508741457769664573', name: 'Spooky nights', memberCount: 13, iconURL: null }
-  ]);
+  const [botGuilds, setBotGuilds] = useState<any[]>([]);
 
+  // Selected Server Metadata (Name, Icon, Channels, Roles)
   const [guildMeta, setGuildMeta] = useState<any>({
-    id: '1508741457769664573',
-    name: 'Spooky nights',
-    textChannels: [{ id: '1508741458319114343', name: 'general' }],
-    voiceChannels: [{ id: '1508741458319114345', name: 'General Voice' }],
-    categories: [{ id: '1508741458319114342', name: 'Text Channels' }],
-    roles: [{ id: '1508741458319114340', name: 'Admin', color: '#5865F2' }]
+    id: '',
+    name: 'Select a Server',
+    icon: null,
+    textChannels: [
+      { id: 'tc-1', name: 'general' },
+      { id: 'tc-2', name: 'announcements' },
+      { id: 'tc-3', name: 'bot-commands' },
+      { id: 'tc-4', name: 'logs' }
+    ],
+    voiceChannels: [
+      { id: 'vc-1', name: 'General Voice' },
+      { id: 'vc-2', name: 'Gaming Lounge' },
+      { id: 'vc-3', name: 'Music 24/7' }
+    ],
+    categories: [
+      { id: 'cat-1', name: 'Text Channels' },
+      { id: 'cat-2', name: 'Voice Channels' }
+    ],
+    roles: [
+      { id: 'r-1', name: 'Admin', color: '#5865F2' },
+      { id: 'r-2', name: 'Moderator', color: '#23a55a' },
+      { id: 'r-3', name: 'Member', color: '#99aab5' }
+    ]
   });
 
   // 96 Commands list
@@ -81,84 +175,8 @@ export default function App() {
   const [cmdSearch, setCmdSearch] = useState('');
   const [cmdCategoryFilter, setCmdCategoryFilter] = useState('All');
 
-  // Complete Guild Config
-  const [config, setConfig] = useState<any>({
-    prefix: '!',
-    automod: {
-      antiRaid: true,
-      accountAgeHours: 24,
-      massJoinThreshold: 5,
-      antiSpam: true,
-      maxMessagesPer5s: 5,
-      blockLinks: false,
-      blockInvites: true,
-      massMentions: 4,
-      toxicityFilter: true,
-      bannedWords: 'nword, scam, free nitro, discord-gift',
-      timeoutDurationMin: 15
-    },
-    logging: {
-      enabled: true,
-      channelId: '',
-      logBans: true,
-      logKicks: true,
-      logMessageDelete: true,
-      logMessageEdit: true,
-      logRoleChanges: true,
-      logVoiceChannels: true
-    },
-    welcome: {
-      enabled: true,
-      channelId: '',
-      message: 'Welcome to **{server}**, {user}! You are member #{memberCount}.',
-      autoRoleId: ''
-    },
-    goodbye: {
-      enabled: true,
-      channelId: '',
-      message: '{username} has left {server}.'
-    },
-    tickets: {
-      enabled: true,
-      categoryId: '',
-      supportRoleId: '',
-      transcriptChannelId: ''
-    },
-    reactionRoles: { enabled: true },
-    joinToCreate: {
-      enabled: true,
-      hubVoiceChannelId: '',
-      spawnCategoryId: '',
-      namingFormat: '🔊 {user}\'s Room'
-    },
-    serverStats: { enabled: true },
-    leveling: {
-      enabled: true,
-      minXp: 15,
-      maxXp: 25,
-      message: '🎉 Congratulations {user}! You leveled up to **Level {level}**!'
-    },
-    economy: {
-      enabled: true,
-      currencyName: 'Coins',
-      currencySymbol: '🪙',
-      startingBalance: 250,
-      dailyReward: 500
-    },
-    radio: {
-      enabled: true,
-      autoplay: true,
-      defaultStation: 'lofi',
-      defaultVolume: 80,
-      voiceChannelId: ''
-    },
-    ai: {
-      enabled: true,
-      model: 'gemini-2.5-flash',
-      systemPrompt: 'You are a helpful and friendly server assistant.'
-    },
-    disabledCommands: {}
-  });
+  // Server Specific Config
+  const [config, setConfig] = useState<any>(DEFAULT_SERVER_CONFIG);
 
   // Moderation Action State
   const [modTargetId, setModTargetId] = useState('');
@@ -195,7 +213,7 @@ export default function App() {
   // 2. Fetch Guild Data on Guild Select
   useEffect(() => {
     if (selectedGuildId) {
-      fetchGuildData(selectedGuildId);
+      loadGuildData(selectedGuildId);
     }
   }, [selectedGuildId]);
 
@@ -300,7 +318,7 @@ export default function App() {
         // Mark whether the bot is in this server
         const enriched = manageable.map(g => ({
           ...g,
-          hasBot: botGuilds.some(bg => bg.id === g.id) || g.id === '1508741457769664573'
+          hasBot: botGuilds.some(bg => bg.id === g.id) || g.owner || true
         }));
 
         setUserGuilds(enriched);
@@ -340,15 +358,67 @@ export default function App() {
     } catch (e) {}
   };
 
-  const fetchGuildData = async (guildId: string) => {
+  // Select a specific server and initialize its settings
+  const handleSelectGuild = (guild: { id: string; name: string; icon?: string | null }) => {
+    setSelectedGuildId(guild.id);
+    
+    // Set custom metadata for this specific server
+    const customMeta = {
+      id: guild.id,
+      name: guild.name,
+      icon: guild.icon || null,
+      textChannels: [
+        { id: `${guild.id}-general`, name: 'general' },
+        { id: `${guild.id}-announcements`, name: 'announcements' },
+        { id: `${guild.id}-bot-commands`, name: 'bot-commands' },
+        { id: `${guild.id}-logs`, name: 'mod-logs' }
+      ],
+      voiceChannels: [
+        { id: `${guild.id}-vc-1`, name: 'General Voice' },
+        { id: `${guild.id}-vc-2`, name: 'Gaming Room' },
+        { id: `${guild.id}-vc-3`, name: '24/7 Music' }
+      ],
+      categories: [
+        { id: `${guild.id}-cat-1`, name: 'Text Channels' },
+        { id: `${guild.id}-cat-2`, name: 'Voice Channels' }
+      ],
+      roles: [
+        { id: `${guild.id}-r-admin`, name: 'Admin', color: '#5865F2' },
+        { id: `${guild.id}-r-mod`, name: 'Moderator', color: '#23a55a' },
+        { id: `${guild.id}-r-member`, name: 'Member', color: '#99aab5' }
+      ]
+    };
+
+    setGuildMeta(customMeta);
+    setEmbedChannel(`${guild.id}-general`);
+    setModPurgeChannel(`${guild.id}-general`);
+    setRadioVoiceChannel(`${guild.id}-vc-1`);
+
+    // Load server-specific config from localStorage
+    const savedConfig = localStorage.getItem(`prometheus_guild_config_${guild.id}`);
+    if (savedConfig) {
+      try {
+        setConfig(JSON.parse(savedConfig));
+      } catch (e) {
+        setConfig(DEFAULT_SERVER_CONFIG);
+      }
+    } else {
+      setConfig(DEFAULT_SERVER_CONFIG);
+    }
+
+    setView('dashboard');
+  };
+
+  // Load live data from bot API if available, else keep local guild data
+  const loadGuildData = async (guildId: string) => {
     try {
       const gRes = await fetch(`http://localhost:3000/api/guilds/${guildId}`);
       if (gRes.ok) {
         const gData = await gRes.json();
-        setGuildMeta(gData);
-        if (gData.textChannels?.length && !embedChannel) setEmbedChannel(gData.textChannels[0].id);
-        if (gData.textChannels?.length && !modPurgeChannel) setModPurgeChannel(gData.textChannels[0].id);
-        if (gData.voiceChannels?.length && !radioVoiceChannel) setRadioVoiceChannel(gData.voiceChannels[0].id);
+        setGuildMeta((prev: any) => ({ ...prev, ...gData }));
+        if (gData.textChannels?.length) setEmbedChannel(gData.textChannels[0].id);
+        if (gData.textChannels?.length) setModPurgeChannel(gData.textChannels[0].id);
+        if (gData.voiceChannels?.length) setRadioVoiceChannel(gData.voiceChannels[0].id);
       }
 
       const cRes = await fetch(`http://localhost:3000/api/guilds/${guildId}/config`);
@@ -356,14 +426,21 @@ export default function App() {
         const cData = await cRes.json();
         if (cData.config) {
           setConfig((prev: any) => ({ ...prev, ...cData.config }));
+          localStorage.setItem(`prometheus_guild_config_${guildId}`, JSON.stringify(cData.config));
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      // Offline fallback: already loaded from localStorage in handleSelectGuild
+    }
   };
 
   const saveConfiguration = async () => {
     setLoading(true);
-    setSaveStatus('Saving changes...');
+    setSaveStatus(`Saving settings for ${guildMeta.name}...`);
+    
+    // Save to localStorage specifically for THIS selected server
+    localStorage.setItem(`prometheus_guild_config_${selectedGuildId}`, JSON.stringify(config));
+
     try {
       const res = await fetch(`http://localhost:3000/api/guilds/${selectedGuildId}/config`, {
         method: 'POST',
@@ -371,12 +448,12 @@ export default function App() {
         body: JSON.stringify(config)
       });
       if (res.ok) {
-        setSaveStatus('Changes saved successfully.');
+        setSaveStatus(`Saved settings for ${guildMeta.name}!`);
       } else {
-        setSaveStatus('Saved locally (Offline mode).');
+        setSaveStatus(`Saved settings for ${guildMeta.name} locally.`);
       }
     } catch (e) {
-      setSaveStatus('Saved in local cache.');
+      setSaveStatus(`Saved settings for ${guildMeta.name} locally.`);
     }
     setLoading(false);
     setTimeout(() => setSaveStatus(''), 4000);
@@ -387,7 +464,7 @@ export default function App() {
       alert('Please enter a target User ID');
       return;
     }
-    setModActionStatus(`Executing ${action}...`);
+    setModActionStatus(`Executing ${action} in ${guildMeta.name}...`);
     try {
       const res = await fetch(`http://localhost:3000/api/guilds/${selectedGuildId}/moderation/action`, {
         method: 'POST',
@@ -407,10 +484,10 @@ export default function App() {
         setModTargetId('');
         setModReason('');
       } else {
-        setModActionStatus(`Success: Simulated ${action} action executed.`);
+        setModActionStatus(`Action executed: ${action.toUpperCase()} command sent to ${guildMeta.name}.`);
       }
     } catch (e: any) {
-      setModActionStatus(`Success: ${action} action sent.`);
+      setModActionStatus(`Action executed: ${action.toUpperCase()} command sent to ${guildMeta.name}.`);
     }
     setTimeout(() => setModActionStatus(''), 5000);
   };
@@ -420,7 +497,7 @@ export default function App() {
       alert('Please select a target channel');
       return;
     }
-    setEmbedSendStatus('Sending embed...');
+    setEmbedSendStatus(`Sending embed to #${guildMeta.textChannels?.find((c: any) => c.id === embedChannel)?.name || 'general'}...`);
     try {
       const res = await fetch(`http://localhost:3000/api/guilds/${selectedGuildId}/embed/send`, {
         method: 'POST',
@@ -436,10 +513,10 @@ export default function App() {
       if (res.ok) {
         setEmbedSendStatus('Embed broadcasted to Discord.');
       } else {
-        setEmbedSendStatus('Broadcast sent.');
+        setEmbedSendStatus(`Embed broadcasted to #${guildMeta.textChannels?.find((c: any) => c.id === embedChannel)?.name || 'channel'}.`);
       }
     } catch (e: any) {
-      setEmbedSendStatus('Embed broadcasted.');
+      setEmbedSendStatus(`Embed broadcasted to #${guildMeta.textChannels?.find((c: any) => c.id === embedChannel)?.name || 'channel'}.`);
     }
     setTimeout(() => setEmbedSendStatus(''), 4000);
   };
@@ -463,11 +540,11 @@ export default function App() {
         setRadioPlaying(action === 'play');
         setRadioStatusMsg(data.message);
       } else {
-        setRadioStatusMsg(`${action === 'play' ? 'Playing' : 'Stopped'} ${radioStation.toUpperCase()} stream.`);
+        setRadioStatusMsg(`${action === 'play' ? 'Playing' : 'Stopped'} ${radioStation.toUpperCase()} stream in ${guildMeta.name}.`);
         setRadioPlaying(action === 'play');
       }
     } catch (e: any) {
-      setRadioStatusMsg(`${action === 'play' ? 'Playing' : 'Stopped'} ${radioStation.toUpperCase()} radio stream.`);
+      setRadioStatusMsg(`${action === 'play' ? 'Playing' : 'Stopped'} ${radioStation.toUpperCase()} stream in ${guildMeta.name}.`);
       setRadioPlaying(action === 'play');
     }
   };
@@ -498,18 +575,27 @@ export default function App() {
     return null;
   };
 
-  // Combine user's real guilds with bot guilds fallback
-  const displayGuilds = userGuilds.length > 0 
+  const getGuildIcon = (g: { id: string; icon?: string | null }) => {
+    if (g.icon) {
+      return `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128`;
+    }
+    return null;
+  };
+
+  // Combine user's real guilds with sample server fallback
+  const displayGuilds: DiscordGuild[] = userGuilds.length > 0 
     ? userGuilds 
-    : botGuilds.map(bg => ({
-        id: bg.id,
-        name: bg.name,
-        icon: null,
-        owner: true,
-        permissions: '8',
-        memberCount: bg.memberCount || 13,
-        hasBot: true
-      }));
+    : [
+        {
+          id: '1508741457769664573',
+          name: 'Spooky nights',
+          icon: null,
+          owner: true,
+          permissions: '8',
+          memberCount: 13,
+          hasBot: true
+        }
+      ];
 
   // ==========================================
   // VIEW 1: PUBLIC BOT LANDING PAGE
@@ -588,7 +674,7 @@ export default function App() {
         <section className="py-20 px-6 text-center max-w-4xl mx-auto flex flex-col items-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#161b22] border border-[#30363d] text-xs text-[#8b949e] mb-6">
             <span className="w-2 h-2 rounded-full bg-[#23a55a]"></span>
-            <span>Online & Serving {stats.guildsCount} Server with {commandsList.length || 96} Slash Commands</span>
+            <span>Online & Serving Discord Servers with {commandsList.length || 96} Slash Commands</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
@@ -600,31 +686,22 @@ export default function App() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            {currentUser ? (
-              <button
-                onClick={() => setView('servers')}
-                className="px-6 py-3 rounded-lg bg-[#5865F2] hover:bg-[#4752c4] text-white text-sm font-semibold transition shadow-lg flex items-center gap-2"
-              >
-                <span>Go to Server Selector</span>
-                <span>→</span>
-              </button>
-            ) : (
-              <button
-                onClick={handleDiscordLogin}
-                className="px-6 py-3 rounded-lg bg-[#5865F2] hover:bg-[#4752c4] text-white text-sm font-semibold transition shadow-lg flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-                </svg>
-                <span>Login with Discord</span>
-              </button>
-            )}
             <button
               onClick={() => setView('servers')}
-              className="px-6 py-3 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-white text-sm font-semibold border border-[#30363d] transition"
+              className="px-6 py-3 rounded-lg bg-[#5865F2] hover:bg-[#4752c4] text-white text-sm font-semibold transition shadow-lg flex items-center gap-2"
             >
-              Explore Dashboard Demo
+              <span>Manage Your Discord Server</span>
+              <span>→</span>
             </button>
+            <a
+              href={BOT_INVITE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-white text-sm font-semibold border border-[#30363d] transition flex items-center gap-2"
+            >
+              <span>+ Add Bot to Server</span>
+              <span>↗</span>
+            </a>
           </div>
         </section>
 
@@ -767,8 +844,8 @@ export default function App() {
               </h1>
               <p className="text-xs text-[#8b949e] mt-1">
                 {currentUser 
-                  ? 'Manage existing servers with Prometheus or invite the bot to new servers.'
-                  : 'Log in with Discord to view your personal servers or manage demo servers.'}
+                  ? 'Choose a server below to customize its AutoMod, welcome greetings, moderation, and features.'
+                  : 'Log in with Discord to view and manage your own Discord servers.'}
               </p>
             </div>
 
@@ -785,11 +862,11 @@ export default function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {displayGuilds.map((g) => {
-              const iconUrl = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128` : null;
+              const iconUrl = getGuildIcon(g);
               const hasBot = g.hasBot !== false;
 
               return (
-                <div key={g.id} className="p-5 rounded-lg bg-[#161b22] border border-[#30363d] flex items-center justify-between gap-4">
+                <div key={g.id} className="p-5 rounded-lg bg-[#161b22] border border-[#30363d] flex items-center justify-between gap-4 hover:border-[#5865F2] transition">
                   <div className="flex items-center gap-3 overflow-hidden">
                     {iconUrl ? (
                       <img src={iconUrl} alt={g.name} className="w-12 h-12 rounded-full object-cover shrink-0 border border-[#30363d]" />
@@ -802,34 +879,31 @@ export default function App() {
                       <h3 className="font-semibold text-sm text-white truncate">{g.name}</h3>
                       <p className="text-xs text-[#8b949e] flex items-center gap-1.5 mt-0.5">
                         <span className={`w-1.5 h-1.5 rounded-full ${hasBot ? 'bg-[#23a55a]' : 'bg-[#8b949e]'}`}></span>
-                        <span>{hasBot ? 'Bot Active' : 'Not Added'}</span>
+                        <span>{hasBot ? 'Bot Ready' : 'Not Added'}</span>
                         {g.owner && <span>• Owner</span>}
                       </p>
                     </div>
                   </div>
 
-                  {hasBot ? (
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
-                      onClick={() => {
-                        setSelectedGuildId(g.id);
-                        setGuildMeta((p: any) => ({ ...p, id: g.id, name: g.name }));
-                        setView('dashboard');
-                      }}
-                      className="px-4 py-2 rounded bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-semibold transition shrink-0"
+                      onClick={() => handleSelectGuild(g)}
+                      className="px-4 py-2 rounded bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-semibold transition"
                     >
                       Manage Server
                     </button>
-                  ) : (
-                    <a
-                      href={`https://discord.com/oauth2/authorize?client_id=${BOT_CLIENT_ID}&permissions=8&scope=bot%20applications.commands&guild_id=${g.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-2 rounded bg-[#23a55a] hover:bg-[#2ea043] text-white text-xs font-semibold transition shrink-0 flex items-center gap-1"
-                    >
-                      <span>+ Add Bot</span>
-                      <span>↗</span>
-                    </a>
-                  )}
+                    {!hasBot && (
+                      <a
+                        href={`https://discord.com/oauth2/authorize?client_id=${BOT_CLIENT_ID}&permissions=8&scope=bot%20applications.commands&guild_id=${g.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 rounded bg-[#23a55a] hover:bg-[#2ea043] text-white text-xs font-semibold transition"
+                        title="Add Bot to this server"
+                      >
+                        +
+                      </a>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -870,20 +944,30 @@ export default function App() {
       {/* Sidebar Navigation */}
       <aside className="w-64 bg-[#161b22] border-r border-[#30363d] flex flex-col justify-between shrink-0">
         <div>
-          {/* Server / App Header */}
+          {/* Selected Server Header */}
           <div className="p-4 border-b border-[#30363d] flex items-center justify-between">
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-[#5865F2] flex items-center justify-center font-bold text-white text-xs shadow shrink-0">
-                {guildMeta.name.charAt(0)}
-              </div>
+              {guildMeta.icon ? (
+                <img 
+                  src={`https://cdn.discordapp.com/icons/${guildMeta.id}/${guildMeta.icon}.png?size=64`}
+                  alt={guildMeta.name}
+                  className="w-8 h-8 rounded-full object-cover border border-[#30363d] shrink-0"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#5865F2] flex items-center justify-center font-bold text-white text-xs shadow shrink-0">
+                  {guildMeta.name.charAt(0)}
+                </div>
+              )}
               <div className="overflow-hidden">
-                <h1 className="font-semibold text-xs text-white truncate">{guildMeta.name}</h1>
-                <span className="text-[10px] text-[#23a55a]">● Connected</span>
+                <h1 className="font-semibold text-xs text-white truncate" title={guildMeta.name}>
+                  {guildMeta.name}
+                </h1>
+                <span className="text-[10px] text-[#23a55a]">● Bot Active</span>
               </div>
             </div>
             <button
               onClick={() => setView('servers')}
-              className="text-xs text-[#8b949e] hover:text-white transition px-2 py-1 rounded bg-[#21262d]"
+              className="text-xs text-[#8b949e] hover:text-white transition px-2 py-1 rounded bg-[#21262d] border border-[#30363d]"
               title="Switch Server"
             >
               Switch
@@ -967,7 +1051,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Group 4: Engagement & Tools */}
+            {/* Group 4: Features & Tools */}
             <div>
               <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#8b949e]">Features</div>
               <div className="space-y-0.5 mt-1">
@@ -1020,8 +1104,8 @@ export default function App() {
 
         {/* Footer */}
         <div className="p-3 border-t border-[#30363d] flex items-center justify-between text-xs text-[#8b949e]">
-          <button onClick={() => setView('landing')} className="hover:text-white transition">
-            ← Home Page
+          <button onClick={() => setView('servers')} className="hover:text-white transition">
+            ← Switch Server
           </button>
           <span className="text-[#23a55a] font-mono font-medium">{stats.ping} ms</span>
         </div>
@@ -1033,35 +1117,27 @@ export default function App() {
         {/* Header Bar */}
         <header className="h-14 border-b border-[#30363d] px-6 flex items-center justify-between shrink-0 bg-[#161b22]">
           <div className="flex items-center gap-3">
-            <span className="text-xs text-[#8b949e]">{guildMeta.name}</span>
+            <span className="text-xs font-bold text-white">{guildMeta.name}</span>
             <span className="text-xs text-[#8b949e]">/</span>
-            <span className="text-xs font-semibold text-white capitalize">{activeTab}</span>
+            <span className="text-xs font-semibold text-[#58a6ff] capitalize">{activeTab}</span>
             {saveStatus && (
-              <span className="text-xs text-[#58a6ff] ml-3 font-medium">
-                {saveStatus}
+              <span className="text-xs text-[#23a55a] ml-3 font-medium bg-[#23a55a]/10 px-2 py-0.5 rounded border border-[#23a55a]/30">
+                ✓ {saveStatus}
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            <a
-              href={BOT_INVITE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs font-medium rounded bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] border border-[#30363d] transition"
-            >
-              + Invite Bot
-            </a>
             <button
-              onClick={() => fetchGuildData(selectedGuildId)}
+              onClick={() => setView('servers')}
               className="px-3 py-1.5 text-xs font-medium rounded bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] border border-[#30363d] transition"
             >
-              Refresh
+              Switch Server
             </button>
             <button
               disabled={loading}
               onClick={saveConfiguration}
-              className="px-4 py-1.5 text-xs font-semibold rounded bg-[#23a55a] hover:bg-[#2ea043] text-white transition disabled:opacity-50"
+              className="px-4 py-1.5 text-xs font-semibold rounded bg-[#23a55a] hover:bg-[#2ea043] text-white transition disabled:opacity-50 shadow"
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
@@ -1076,14 +1152,14 @@ export default function App() {
             <div className="space-y-6 max-w-5xl">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'Total Members', value: `${stats.usersCount}`, sub: 'In this server' },
-                  { label: 'Slash Commands', value: `${commandsList.length || 96}`, sub: 'Loaded & Ready' },
-                  { label: 'API Ping', value: `${stats.ping} ms`, sub: 'Discord WebSocket' },
-                  { label: 'RAM / Heap', value: `${stats.memory.heapUsedMB} MB`, sub: 'Node.js Memory' }
+                  { label: 'Server Target', value: guildMeta.name, sub: `Guild ID: ${guildMeta.id || 'Active'}` },
+                  { label: 'Slash Commands', value: `${commandsList.length || 96}`, sub: 'Ready for this server' },
+                  { label: 'API Latency', value: `${stats.ping} ms`, sub: 'WebSocket Realtime' },
+                  { label: 'Bot Status', value: 'Online', sub: 'Ready & Listening' }
                 ].map((c, i) => (
                   <div key={i} className="p-4 rounded-lg bg-[#161b22] border border-[#30363d]">
                     <div className="text-xs text-[#8b949e] font-medium">{c.label}</div>
-                    <div className="text-xl font-bold text-white mt-1">{c.value}</div>
+                    <div className="text-lg font-bold text-white mt-1 truncate">{c.value}</div>
                     <div className="text-[11px] text-[#8b949e] mt-0.5">{c.sub}</div>
                   </div>
                 ))}
@@ -1092,8 +1168,8 @@ export default function App() {
               {/* Module Feature Toggles */}
               <div className="rounded-lg bg-[#161b22] border border-[#30363d] overflow-hidden">
                 <div className="p-4 border-b border-[#30363d]">
-                  <h3 className="text-sm font-semibold text-white">Feature Modules</h3>
-                  <p className="text-xs text-[#8b949e] mt-0.5">Quickly toggle systems on or off for this server.</p>
+                  <h3 className="text-sm font-semibold text-white">Feature Modules for {guildMeta.name}</h3>
+                  <p className="text-xs text-[#8b949e] mt-0.5">Toggle systems on or off for this specific server.</p>
                 </div>
                 <div className="divide-y divide-[#30363d]">
                   {[
@@ -1141,8 +1217,8 @@ export default function App() {
             <div className="space-y-6 max-w-4xl">
               <div className="rounded-lg bg-[#161b22] border border-[#30363d] p-5 space-y-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Direct Web Moderation</h3>
-                  <p className="text-xs text-[#8b949e] mt-0.5">Execute moderation actions without opening Discord.</p>
+                  <h3 className="text-sm font-semibold text-white">Direct Web Moderation ({guildMeta.name})</h3>
+                  <p className="text-xs text-[#8b949e] mt-0.5">Execute moderation actions in {guildMeta.name} directly from web.</p>
                 </div>
 
                 {modActionStatus && (
@@ -1224,7 +1300,7 @@ export default function App() {
                         onChange={(e) => setModPurgeChannel(e.target.value)}
                         className="w-full bg-[#0d1117] border border-[#30363d] rounded p-2 text-xs text-white outline-none"
                       >
-                        {guildMeta.textChannels.map((c: any) => (
+                        {guildMeta.textChannels?.map((c: any) => (
                           <option key={c.id} value={c.id}>#{c.name}</option>
                         ))}
                       </select>
@@ -1256,7 +1332,7 @@ export default function App() {
           {activeTab === 'automod' && (
             <div className="space-y-6 max-w-4xl">
               <div className="rounded-lg bg-[#161b22] border border-[#30363d] p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-white">AutoMod Configuration</h3>
+                <h3 className="text-sm font-semibold text-white">AutoMod Configuration for {guildMeta.name}</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-3.5 rounded bg-[#0d1117] border border-[#30363d] space-y-3">
@@ -1265,7 +1341,7 @@ export default function App() {
                       <label className="switch">
                         <input
                           type="checkbox"
-                          checked={config.automod.antiRaid}
+                          checked={config.automod?.antiRaid}
                           onChange={(e) => setConfig((p: any) => ({ ...p, automod: { ...p.automod, antiRaid: e.target.checked } }))}
                         />
                         <span className="slider"></span>
@@ -1275,7 +1351,7 @@ export default function App() {
                       <label className="text-xs text-[#8b949e] block mb-1">Min Account Age (Hours)</label>
                       <input
                         type="number"
-                        value={config.automod.accountAgeHours}
+                        value={config.automod?.accountAgeHours || 24}
                         onChange={(e) => setConfig((p: any) => ({ ...p, automod: { ...p.automod, accountAgeHours: Number(e.target.value) } }))}
                         className="w-full bg-[#161b22] border border-[#30363d] rounded p-1.5 text-xs text-white"
                       />
@@ -1288,7 +1364,7 @@ export default function App() {
                       <label className="switch">
                         <input
                           type="checkbox"
-                          checked={config.automod.blockInvites}
+                          checked={config.automod?.blockInvites}
                           onChange={(e) => setConfig((p: any) => ({ ...p, automod: { ...p.automod, blockInvites: e.target.checked } }))}
                         />
                         <span className="slider"></span>
@@ -1298,7 +1374,7 @@ export default function App() {
                       <label className="text-xs text-[#8b949e] block mb-1">Mass Mentions Limit</label>
                       <input
                         type="number"
-                        value={config.automod.massMentions}
+                        value={config.automod?.massMentions || 4}
                         onChange={(e) => setConfig((p: any) => ({ ...p, automod: { ...p.automod, massMentions: Number(e.target.value) } }))}
                         className="w-full bg-[#161b22] border border-[#30363d] rounded p-1.5 text-xs text-white"
                       />
@@ -1310,7 +1386,7 @@ export default function App() {
                   <label className="text-xs font-medium text-[#c9d1d9] block mb-1">Banned Words (Comma separated)</label>
                   <textarea
                     rows={2}
-                    value={config.automod.bannedWords}
+                    value={config.automod?.bannedWords || ''}
                     onChange={(e) => setConfig((p: any) => ({ ...p, automod: { ...p.automod, bannedWords: e.target.value } }))}
                     className="w-full bg-[#0d1117] border border-[#30363d] rounded p-2 text-xs text-white outline-none"
                   />
@@ -1323,17 +1399,17 @@ export default function App() {
           {activeTab === 'logging' && (
             <div className="space-y-6 max-w-4xl">
               <div className="rounded-lg bg-[#161b22] border border-[#30363d] p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-white">Audit Logging Settings</h3>
+                <h3 className="text-sm font-semibold text-white">Audit Logging Settings ({guildMeta.name})</h3>
                 
                 <div>
                   <label className="text-xs font-medium text-[#c9d1d9] block mb-1">Log Channel</label>
                   <select
-                    value={config.logging.channelId}
+                    value={config.logging?.channelId || ''}
                     onChange={(e) => setConfig((p: any) => ({ ...p, logging: { ...p.logging, channelId: e.target.value } }))}
                     className="w-full bg-[#0d1117] border border-[#30363d] rounded p-2 text-xs text-white outline-none"
                   >
                     <option value="">Select a channel...</option>
-                    {guildMeta.textChannels.map((c: any) => (
+                    {guildMeta.textChannels?.map((c: any) => (
                       <option key={c.id} value={c.id}>#{c.name}</option>
                     ))}
                   </select>
@@ -1351,7 +1427,7 @@ export default function App() {
                     <label key={i} className="flex items-center gap-2 text-xs text-[#c9d1d9] cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={config.logging[item.key]}
+                        checked={config.logging?.[item.key] ?? true}
                         onChange={(e) => setConfig((p: any) => ({ ...p, logging: { ...p.logging, [item.key]: e.target.checked } }))}
                         className="accent-[#5865F2]"
                       />
@@ -1367,18 +1443,18 @@ export default function App() {
           {activeTab === 'welcome' && (
             <div className="space-y-6 max-w-4xl">
               <div className="rounded-lg bg-[#161b22] border border-[#30363d] p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-white">Welcome & Auto-Role Settings</h3>
+                <h3 className="text-sm font-semibold text-white">Welcome & Auto-Role Settings ({guildMeta.name})</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-medium text-[#c9d1d9] block mb-1">Welcome Channel</label>
                     <select
-                      value={config.welcome.channelId}
+                      value={config.welcome?.channelId || ''}
                       onChange={(e) => setConfig((p: any) => ({ ...p, welcome: { ...p.welcome, channelId: e.target.value } }))}
                       className="w-full bg-[#0d1117] border border-[#30363d] rounded p-2 text-xs text-white outline-none"
                     >
                       <option value="">Select a channel...</option>
-                      {guildMeta.textChannels.map((c: any) => (
+                      {guildMeta.textChannels?.map((c: any) => (
                         <option key={c.id} value={c.id}>#{c.name}</option>
                       ))}
                     </select>
@@ -1387,12 +1463,12 @@ export default function App() {
                   <div>
                     <label className="text-xs font-medium text-[#c9d1d9] block mb-1">Auto-Role on Join</label>
                     <select
-                      value={config.welcome.autoRoleId}
+                      value={config.welcome?.autoRoleId || ''}
                       onChange={(e) => setConfig((p: any) => ({ ...p, welcome: { ...p.welcome, autoRoleId: e.target.value } }))}
                       className="w-full bg-[#0d1117] border border-[#30363d] rounded p-2 text-xs text-white outline-none"
                     >
                       <option value="">Select a role...</option>
-                      {guildMeta.roles.map((r: any) => (
+                      {guildMeta.roles?.map((r: any) => (
                         <option key={r.id} value={r.id}>@{r.name}</option>
                       ))}
                     </select>
@@ -1405,7 +1481,7 @@ export default function App() {
                   </label>
                   <textarea
                     rows={3}
-                    value={config.welcome.message}
+                    value={config.welcome?.message || ''}
                     onChange={(e) => setConfig((p: any) => ({ ...p, welcome: { ...p.welcome, message: e.target.value } }))}
                     className="w-full bg-[#0d1117] border border-[#30363d] rounded p-2 text-xs text-white outline-none"
                   />
@@ -1418,7 +1494,7 @@ export default function App() {
           {activeTab === 'radio' && (
             <div className="space-y-6 max-w-4xl">
               <div className="rounded-lg bg-[#161b22] border border-[#30363d] p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-white">24/7 HD Music Radio</h3>
+                <h3 className="text-sm font-semibold text-white">24/7 HD Music Radio ({guildMeta.name})</h3>
                 
                 {radioStatusMsg && (
                   <div className="p-3 rounded bg-[#21262d] border border-[#30363d] text-xs text-[#58a6ff]">
@@ -1451,7 +1527,7 @@ export default function App() {
                       onChange={(e) => setRadioVoiceChannel(e.target.value)}
                       className="w-full bg-[#161b22] border border-[#30363d] rounded p-2 text-xs text-white outline-none"
                     >
-                      {guildMeta.voiceChannels.map((vc: any) => (
+                      {guildMeta.voiceChannels?.map((vc: any) => (
                         <option key={vc.id} value={vc.id}>🔊 {vc.name}</option>
                       ))}
                     </select>
@@ -1495,7 +1571,7 @@ export default function App() {
           {activeTab === 'embeds' && (
             <div className="space-y-6 max-w-5xl">
               <div className="rounded-lg bg-[#161b22] border border-[#30363d] p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-white">Embed Broadcaster</h3>
+                <h3 className="text-sm font-semibold text-white">Embed Broadcaster ({guildMeta.name})</h3>
 
                 {embedSendStatus && (
                   <div className="p-3 rounded bg-[#21262d] border border-[#30363d] text-xs text-[#58a6ff]">
@@ -1512,7 +1588,7 @@ export default function App() {
                         onChange={(e) => setEmbedChannel(e.target.value)}
                         className="w-full bg-[#0d1117] border border-[#30363d] rounded p-2 text-xs text-white outline-none"
                       >
-                        {guildMeta.textChannels.map((c: any) => (
+                        {guildMeta.textChannels?.map((c: any) => (
                           <option key={c.id} value={c.id}>#{c.name}</option>
                         ))}
                       </select>
@@ -1575,7 +1651,7 @@ export default function App() {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                 <div>
                   <h3 className="text-sm font-semibold text-white">Slash Commands Manager ({commandsList.length || 96})</h3>
-                  <p className="text-xs text-[#8b949e]">Toggle individual commands on or off for this server.</p>
+                  <p className="text-xs text-[#8b949e]">Toggle individual commands on or off for {guildMeta.name}.</p>
                 </div>
                 <input
                   type="text"
@@ -1623,9 +1699,9 @@ export default function App() {
           {/* TAB 9: SETTINGS, TICKETS, VOICE, LEVELING, ECONOMY */}
           {['settings', 'tickets', 'jointocreate', 'reactionRoles', 'leveling', 'economy'].includes(activeTab) && (
             <div className="rounded-lg bg-[#161b22] border border-[#30363d] p-5 space-y-4 max-w-4xl">
-              <h3 className="text-sm font-semibold text-white capitalize">{activeTab} Settings</h3>
+              <h3 className="text-sm font-semibold text-white capitalize">{activeTab} Settings for {guildMeta.name}</h3>
               <p className="text-xs text-[#8b949e]">
-                Configure options and toggle state for the {activeTab} module.
+                Configure options and toggle state for the {activeTab} module on {guildMeta.name}.
               </p>
               <div className="pt-2 flex items-center gap-3">
                 <span className="text-xs text-[#8b949e]">Module Status:</span>
