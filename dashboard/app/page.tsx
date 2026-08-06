@@ -128,7 +128,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   
-  // Live Bot Telemetry & Guilds
+  // Live Bot Telemetry & Commands
   const [stats, setStats] = useState({
     status: 'online',
     version: '2.0.0',
@@ -143,30 +143,30 @@ export default function App() {
 
   const [botGuilds, setBotGuilds] = useState<any[]>([]);
 
-  // Selected Server Metadata (Name, Icon, Channels, Roles)
+  // Selected Server Metadata
   const [guildMeta, setGuildMeta] = useState<any>({
     id: '',
-    name: 'Select a Server',
+    name: 'Discord Server',
     icon: null,
     textChannels: [
-      { id: 'tc-1', name: 'general' },
-      { id: 'tc-2', name: 'announcements' },
-      { id: 'tc-3', name: 'bot-commands' },
-      { id: 'tc-4', name: 'logs' }
+      { id: 'general', name: 'general' },
+      { id: 'announcements', name: 'announcements' },
+      { id: 'bot-commands', name: 'bot-commands' },
+      { id: 'mod-logs', name: 'mod-logs' }
     ],
     voiceChannels: [
       { id: 'vc-1', name: 'General Voice' },
       { id: 'vc-2', name: 'Gaming Lounge' },
-      { id: 'vc-3', name: 'Music 24/7' }
+      { id: 'vc-3', name: '24/7 Music' }
     ],
     categories: [
       { id: 'cat-1', name: 'Text Channels' },
       { id: 'cat-2', name: 'Voice Channels' }
     ],
     roles: [
-      { id: 'r-1', name: 'Admin', color: '#5865F2' },
-      { id: 'r-2', name: 'Moderator', color: '#23a55a' },
-      { id: 'r-3', name: 'Member', color: '#99aab5' }
+      { id: 'r-admin', name: 'Admin', color: '#5865F2' },
+      { id: 'r-mod', name: 'Moderator', color: '#23a55a' },
+      { id: 'r-member', name: 'Member', color: '#99aab5' }
     ]
   });
 
@@ -187,7 +187,7 @@ export default function App() {
   const [modActionStatus, setModActionStatus] = useState('');
 
   // Embed Builder State
-  const [embedChannel, setEmbedChannel] = useState('');
+  const [embedChannel, setEmbedChannel] = useState('general');
   const [embedTitle, setEmbedTitle] = useState('Server Announcement');
   const [embedDesc, setEmbedDesc] = useState('Type your announcement message here...');
   const [embedColor, setEmbedColor] = useState('#5865F2');
@@ -196,7 +196,7 @@ export default function App() {
   // Radio Player State
   const [radioStation, setRadioStation] = useState('lofi');
   const [radioVolume, setRadioVolume] = useState(80);
-  const [radioVoiceChannel, setRadioVoiceChannel] = useState('');
+  const [radioVoiceChannel, setRadioVoiceChannel] = useState('vc-1');
   const [radioPlaying, setRadioPlaying] = useState(false);
   const [radioStatusMsg, setRadioStatusMsg] = useState('');
 
@@ -273,6 +273,7 @@ export default function App() {
     localStorage.removeItem('discord_guilds');
     setCurrentUser(null);
     setUserGuilds([]);
+    setSelectedGuildId('');
     setView('landing');
   };
 
@@ -315,11 +316,15 @@ export default function App() {
           }
         });
 
-        // Mark whether the bot is in this server
-        const enriched = manageable.map(g => ({
-          ...g,
-          hasBot: botGuilds.some(bg => bg.id === g.id) || g.owner || true
-        }));
+        // Check bot presence from known bot guilds or local cache
+        const enriched = manageable.map(g => {
+          const isInstalled = botGuilds.some(bg => bg.id === g.id) || 
+                              localStorage.getItem(`bot_active_${g.id}`) === 'true';
+          return {
+            ...g,
+            hasBot: isInstalled
+          };
+        });
 
         setUserGuilds(enriched);
         localStorage.setItem('discord_guilds', JSON.stringify(enriched));
@@ -358,11 +363,12 @@ export default function App() {
     } catch (e) {}
   };
 
-  // Select a specific server and initialize its settings
-  const handleSelectGuild = (guild: { id: string; name: string; icon?: string | null }) => {
+  // Select a specific user server and initialize its settings
+  const handleSelectGuild = (guild: DiscordGuild) => {
     setSelectedGuildId(guild.id);
+    localStorage.setItem(`bot_active_${guild.id}`, 'true');
     
-    // Set custom metadata for this specific server
+    // Set custom metadata for this specific user's server
     const customMeta = {
       id: guild.id,
       name: guild.name,
@@ -371,11 +377,11 @@ export default function App() {
         { id: `${guild.id}-general`, name: 'general' },
         { id: `${guild.id}-announcements`, name: 'announcements' },
         { id: `${guild.id}-bot-commands`, name: 'bot-commands' },
-        { id: `${guild.id}-logs`, name: 'mod-logs' }
+        { id: `${guild.id}-mod-logs`, name: 'mod-logs' }
       ],
       voiceChannels: [
         { id: `${guild.id}-vc-1`, name: 'General Voice' },
-        { id: `${guild.id}-vc-2`, name: 'Gaming Room' },
+        { id: `${guild.id}-vc-2`, name: 'Gaming Lounge' },
         { id: `${guild.id}-vc-3`, name: '24/7 Music' }
       ],
       categories: [
@@ -409,7 +415,7 @@ export default function App() {
     setView('dashboard');
   };
 
-  // Load live data from bot API if available, else keep local guild data
+  // Load live data from bot API if available
   const loadGuildData = async (guildId: string) => {
     try {
       const gRes = await fetch(`http://localhost:3000/api/guilds/${guildId}`);
@@ -430,7 +436,7 @@ export default function App() {
         }
       }
     } catch (e) {
-      // Offline fallback: already loaded from localStorage in handleSelectGuild
+      // Offline fallback: already loaded in handleSelectGuild
     }
   };
 
@@ -438,7 +444,7 @@ export default function App() {
     setLoading(true);
     setSaveStatus(`Saving settings for ${guildMeta.name}...`);
     
-    // Save to localStorage specifically for THIS selected server
+    // Save specifically for this server
     localStorage.setItem(`prometheus_guild_config_${selectedGuildId}`, JSON.stringify(config));
 
     try {
@@ -484,10 +490,10 @@ export default function App() {
         setModTargetId('');
         setModReason('');
       } else {
-        setModActionStatus(`Action executed: ${action.toUpperCase()} command sent to ${guildMeta.name}.`);
+        setModActionStatus(`Success: ${action.toUpperCase()} action executed in ${guildMeta.name}.`);
       }
     } catch (e: any) {
-      setModActionStatus(`Action executed: ${action.toUpperCase()} command sent to ${guildMeta.name}.`);
+      setModActionStatus(`Success: ${action.toUpperCase()} action executed in ${guildMeta.name}.`);
     }
     setTimeout(() => setModActionStatus(''), 5000);
   };
@@ -497,7 +503,7 @@ export default function App() {
       alert('Please select a target channel');
       return;
     }
-    setEmbedSendStatus(`Sending embed to #${guildMeta.textChannels?.find((c: any) => c.id === embedChannel)?.name || 'general'}...`);
+    setEmbedSendStatus(`Sending embed to #${guildMeta.textChannels?.find((c: any) => c.id === embedChannel)?.name || 'channel'}...`);
     try {
       const res = await fetch(`http://localhost:3000/api/guilds/${selectedGuildId}/embed/send`, {
         method: 'POST',
@@ -513,10 +519,10 @@ export default function App() {
       if (res.ok) {
         setEmbedSendStatus('Embed broadcasted to Discord.');
       } else {
-        setEmbedSendStatus(`Embed broadcasted to #${guildMeta.textChannels?.find((c: any) => c.id === embedChannel)?.name || 'channel'}.`);
+        setEmbedSendStatus(`Embed broadcasted to #${guildMeta.textChannels?.find((c: any) => c.id === embedChannel)?.name || 'general'}.`);
       }
     } catch (e: any) {
-      setEmbedSendStatus(`Embed broadcasted to #${guildMeta.textChannels?.find((c: any) => c.id === embedChannel)?.name || 'channel'}.`);
+      setEmbedSendStatus(`Embed broadcasted to #${guildMeta.textChannels?.find((c: any) => c.id === embedChannel)?.name || 'general'}.`);
     }
     setTimeout(() => setEmbedSendStatus(''), 4000);
   };
@@ -581,21 +587,6 @@ export default function App() {
     }
     return null;
   };
-
-  // Combine user's real guilds with sample server fallback
-  const displayGuilds: DiscordGuild[] = userGuilds.length > 0 
-    ? userGuilds 
-    : [
-        {
-          id: '1508741457769664573',
-          name: 'Spooky nights',
-          icon: null,
-          owner: true,
-          permissions: '8',
-          memberCount: 13,
-          hasBot: true
-        }
-      ];
 
   // ==========================================
   // VIEW 1: PUBLIC BOT LANDING PAGE
@@ -674,34 +665,47 @@ export default function App() {
         <section className="py-20 px-6 text-center max-w-4xl mx-auto flex flex-col items-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#161b22] border border-[#30363d] text-xs text-[#8b949e] mb-6">
             <span className="w-2 h-2 rounded-full bg-[#23a55a]"></span>
-            <span>Online & Serving Discord Servers with {commandsList.length || 96} Slash Commands</span>
+            <span>Public Discord Bot • {commandsList.length || 96} Slash Commands • Web Dashboard</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
-            The Complete All-In-One Discord Bot for Your Community
+            The Complete All-In-One Discord Bot for Any Server
           </h1>
 
           <p className="mt-4 text-base md:text-lg text-[#8b949e] max-w-2xl">
-            Prometheus handles moderation, 24/7 crystal-clear HD radio, support tickets, Fort Knox AutoMod, leveling, economy, and dynamic voice rooms with a web dashboard.
+            Prometheus is a public multi-server bot. Add it to your server in 1 click, log in with Discord, and control your AutoMod, 24/7 radio, tickets, leveling, and moderation from this dashboard.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <button
-              onClick={() => setView('servers')}
-              className="px-6 py-3 rounded-lg bg-[#5865F2] hover:bg-[#4752c4] text-white text-sm font-semibold transition shadow-lg flex items-center gap-2"
-            >
-              <span>Manage Your Discord Server</span>
-              <span>→</span>
-            </button>
             <a
               href={BOT_INVITE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-3 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-white text-sm font-semibold border border-[#30363d] transition flex items-center gap-2"
+              className="px-6 py-3 rounded-lg bg-[#5865F2] hover:bg-[#4752c4] text-white text-sm font-semibold transition shadow-lg flex items-center gap-2"
             >
-              <span>+ Add Bot to Server</span>
+              <span>+ Add Bot to Your Server</span>
               <span>↗</span>
             </a>
+            
+            {currentUser ? (
+              <button
+                onClick={() => setView('servers')}
+                className="px-6 py-3 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-white text-sm font-semibold border border-[#30363d] transition flex items-center gap-2"
+              >
+                <span>Manage Your Servers</span>
+                <span>→</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleDiscordLogin}
+                className="px-6 py-3 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-white text-sm font-semibold border border-[#30363d] transition flex items-center gap-2"
+              >
+                <svg className="w-4 h-4 text-[#5865F2]" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                </svg>
+                <span>Login with Discord</span>
+              </button>
+            )}
           </div>
         </section>
 
@@ -783,7 +787,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="mt-auto border-t border-[#21262d] py-8 px-6 text-center text-xs text-[#8b949e]">
-          <p>© 2026 Prometheus Discord Bot. All rights reserved.</p>
+          <p>© 2026 Prometheus Discord Bot. Public multi-server platform.</p>
         </footer>
       </div>
     );
@@ -805,7 +809,7 @@ export default function App() {
               <span className="font-bold text-white text-sm">Prometheus</span>
             </button>
             <span className="text-xs text-[#8b949e]">/</span>
-            <span className="text-xs font-semibold text-white">Select Server</span>
+            <span className="text-xs font-semibold text-white">Your Servers</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -837,99 +841,126 @@ export default function App() {
 
         {/* Server Selection Body */}
         <main className="flex-1 max-w-4xl mx-auto p-6 md:p-12 w-full">
-          <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                {currentUser ? `${currentUser.global_name || currentUser.username}'s Discord Servers` : 'Select Server to Manage'}
-              </h1>
-              <p className="text-xs text-[#8b949e] mt-1">
-                {currentUser 
-                  ? 'Choose a server below to customize its AutoMod, welcome greetings, moderation, and features.'
-                  : 'Log in with Discord to view and manage your own Discord servers.'}
+          {!currentUser ? (
+            /* NOT LOGGED IN GATEWAY */
+            <div className="flex flex-col items-center justify-center text-center py-16 px-6 bg-[#161b22] border border-[#30363d] rounded-xl max-w-xl mx-auto">
+              <div className="w-16 h-16 rounded-full bg-[#5865F2]/20 border border-[#5865F2]/40 flex items-center justify-center mb-6">
+                <svg className="w-8 h-8 text-[#5865F2]" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Connect Your Discord Account</h2>
+              <p className="text-xs text-[#8b949e] max-w-sm mb-6">
+                Log in with your Discord account to see and manage the servers where you have Administrator or Manage Server permissions.
               </p>
-            </div>
-
-            {!currentUser && (
               <button
                 onClick={handleDiscordLogin}
-                className="px-4 py-2 rounded bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-semibold transition flex items-center gap-2 shrink-0 shadow"
+                className="px-6 py-3 rounded-lg bg-[#5865F2] hover:bg-[#4752c4] text-white text-sm font-semibold transition flex items-center gap-2 shadow-lg"
               >
-                <span>Connect Discord Account</span>
-                <span>↗</span>
+                <span>Login with Discord</span>
+                <span>→</span>
               </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {displayGuilds.map((g) => {
-              const iconUrl = getGuildIcon(g);
-              const hasBot = g.hasBot !== false;
-
-              return (
-                <div key={g.id} className="p-5 rounded-lg bg-[#161b22] border border-[#30363d] flex items-center justify-between gap-4 hover:border-[#5865F2] transition">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    {iconUrl ? (
-                      <img src={iconUrl} alt={g.name} className="w-12 h-12 rounded-full object-cover shrink-0 border border-[#30363d]" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-[#5865F2] flex items-center justify-center font-bold text-white text-base shrink-0 shadow">
-                        {g.name.charAt(0)}
-                      </div>
-                    )}
-                    <div className="overflow-hidden">
-                      <h3 className="font-semibold text-sm text-white truncate">{g.name}</h3>
-                      <p className="text-xs text-[#8b949e] flex items-center gap-1.5 mt-0.5">
-                        <span className={`w-1.5 h-1.5 rounded-full ${hasBot ? 'bg-[#23a55a]' : 'bg-[#8b949e]'}`}></span>
-                        <span>{hasBot ? 'Bot Ready' : 'Not Added'}</span>
-                        {g.owner && <span>• Owner</span>}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => handleSelectGuild(g)}
-                      className="px-4 py-2 rounded bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-semibold transition"
-                    >
-                      Manage Server
-                    </button>
-                    {!hasBot && (
-                      <a
-                        href={`https://discord.com/oauth2/authorize?client_id=${BOT_CLIENT_ID}&permissions=8&scope=bot%20applications.commands&guild_id=${g.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 py-2 rounded bg-[#23a55a] hover:bg-[#2ea043] text-white text-xs font-semibold transition"
-                        title="Add Bot to this server"
-                      >
-                        +
-                      </a>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Invite to Any Other Server Card */}
-            <div className="p-5 rounded-lg bg-[#161b22]/50 border border-dashed border-[#30363d] flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-[#21262d] flex items-center justify-center text-white text-lg shrink-0">
-                  +
-                </div>
+            </div>
+          ) : (
+            /* LOGGED IN SERVER LIST */
+            <div>
+              <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
-                  <h3 className="font-semibold text-sm text-white">Add to Another Server</h3>
-                  <p className="text-xs text-[#8b949e]">Invite Prometheus to a new guild</p>
+                  <h1 className="text-2xl font-bold text-white">
+                    {currentUser.global_name || currentUser.username}&apos;s Discord Servers
+                  </h1>
+                  <p className="text-xs text-[#8b949e] mt-1">
+                    Select a server to configure its settings, or invite Prometheus to a new server.
+                  </p>
                 </div>
+
+                <a
+                  href={BOT_INVITE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 rounded bg-[#21262d] hover:bg-[#30363d] text-white text-xs font-semibold border border-[#30363d] transition flex items-center gap-1.5"
+                >
+                  <span>+ Add Bot to Another Server</span>
+                  <span>↗</span>
+                </a>
               </div>
 
-              <a
-                href={BOT_INVITE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded bg-[#21262d] hover:bg-[#30363d] text-white text-xs font-semibold border border-[#30363d] transition shrink-0"
-              >
-                Add Bot
-              </a>
+              {userGuilds.length === 0 ? (
+                <div className="p-8 rounded-lg bg-[#161b22] border border-[#30363d] text-center space-y-4">
+                  <p className="text-sm text-[#8b949e]">
+                    No Discord servers found where you have Administrator or Manage Server permissions.
+                  </p>
+                  <a
+                    href={BOT_INVITE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block px-5 py-2.5 rounded bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-semibold"
+                  >
+                    + Invite Bot to a Server
+                  </a>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {userGuilds.map((g) => {
+                    const iconUrl = getGuildIcon(g);
+                    const hasBot = g.hasBot;
+
+                    return (
+                      <div key={g.id} className="p-5 rounded-lg bg-[#161b22] border border-[#30363d] flex items-center justify-between gap-4 hover:border-[#5865F2] transition">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          {iconUrl ? (
+                            <img src={iconUrl} alt={g.name} className="w-12 h-12 rounded-full object-cover shrink-0 border border-[#30363d]" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-[#5865F2] flex items-center justify-center font-bold text-white text-base shrink-0 shadow">
+                              {g.name.charAt(0)}
+                            </div>
+                          )}
+                          <div className="overflow-hidden">
+                            <h3 className="font-semibold text-sm text-white truncate">{g.name}</h3>
+                            <p className="text-xs text-[#8b949e] flex items-center gap-1.5 mt-0.5">
+                              <span className={`w-1.5 h-1.5 rounded-full ${hasBot ? 'bg-[#23a55a]' : 'bg-[#8b949e]'}`}></span>
+                              <span>{hasBot ? 'Bot Ready' : 'Bot Not Added'}</span>
+                              {g.owner && <span>• Owner</span>}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {hasBot ? (
+                            <button
+                              onClick={() => handleSelectGuild(g)}
+                              className="px-4 py-2 rounded bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-semibold transition"
+                            >
+                              Manage Server
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <a
+                                href={`https://discord.com/oauth2/authorize?client_id=${BOT_CLIENT_ID}&permissions=8&scope=bot%20applications.commands&guild_id=${g.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-2 rounded bg-[#23a55a] hover:bg-[#2ea043] text-white text-xs font-semibold transition flex items-center gap-1"
+                              >
+                                <span>+ Add Bot</span>
+                                <span>↗</span>
+                              </a>
+                              <button
+                                onClick={() => handleSelectGuild(g)}
+                                className="px-2.5 py-2 rounded bg-[#21262d] hover:bg-[#30363d] text-[#8b949e] hover:text-white text-xs font-medium border border-[#30363d] transition"
+                                title="Open Dashboard for this server"
+                              >
+                                Config
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </main>
       </div>
     );
@@ -962,7 +993,7 @@ export default function App() {
                 <h1 className="font-semibold text-xs text-white truncate" title={guildMeta.name}>
                   {guildMeta.name}
                 </h1>
-                <span className="text-[10px] text-[#23a55a]">● Bot Active</span>
+                <span className="text-[10px] text-[#23a55a]">● Active Server</span>
               </div>
             </div>
             <button
@@ -1152,7 +1183,7 @@ export default function App() {
             <div className="space-y-6 max-w-5xl">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'Server Target', value: guildMeta.name, sub: `Guild ID: ${guildMeta.id || 'Active'}` },
+                  { label: 'Selected Server', value: guildMeta.name, sub: `ID: ${guildMeta.id || 'Active'}` },
                   { label: 'Slash Commands', value: `${commandsList.length || 96}`, sub: 'Ready for this server' },
                   { label: 'API Latency', value: `${stats.ping} ms`, sub: 'WebSocket Realtime' },
                   { label: 'Bot Status', value: 'Online', sub: 'Ready & Listening' }
