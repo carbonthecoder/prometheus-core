@@ -89,7 +89,7 @@ npm install
 # Install dashboard dependencies
 cd ../../dashboard
 npm install
-```
+``
 
 ### 3. Configure Environment Variables
 Create `.env` in `bot/TitanBot-main/`:
