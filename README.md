@@ -19,7 +19,7 @@
 
 ## 🌟 Key Features
 
-- **🌐 Public Landing Page & Web Dashboard:** Full web interface modeled after modern Discord / SaaS control panels with live telemetry, module switches, and server selection.
+- **🌐 Public Landing Page & Web Dashboard:** Full web interface modeled after modern Discord / SaaS control panels with live telemetry, module switches, and server selection more.
 - **🔨 Web & Discord Moderation:** Ban, kick, timeout, unban, and message purge directly from web or Discord with automatic audit logging.
 - **🛡️ Fort Knox AutoMod:** Anti-Raid shield, invite/link suppression, spam detection, mass mention protection, and toxicity word filters.
 - **📻 24/7 HD Music Radio (8 Stations):** Crystal-clear streams (Lofi Girl, ChillHop, Synthwave, Cyberpunk, Anime Lofi, Gaming Beats, Jazz Club, Classical) in voice channels.
