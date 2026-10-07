@@ -1,19 +1,68 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { COMMANDS_DATA, BotCommand } from '../lib/commands';
 
 const GITHUB_REPO_URL = 'https://github.com/carbonthecoder/prometheus-core';
 
+// 8 Verified, live, CORS-friendly 24/7 audio streams (200 audio/mpeg)
 const RADIO_STATIONS = [
-  { id: 'lofi', name: 'Lofi Girl', genre: 'Chill Beats' },
-  { id: 'chillhop', name: 'ChillHop', genre: 'Jazz & Beats' },
-  { id: 'synthwave', name: 'Synthwave', genre: '80s Retro' },
-  { id: 'cyberpunk', name: 'Cyberpunk', genre: 'Electro' },
-  { id: 'anime', name: 'Anime Lofi', genre: 'Japanese Lofi' },
-  { id: 'gaming', name: 'Gaming Beats', genre: 'EDM / Bass' },
-  { id: 'jazz', name: 'Jazz Club', genre: 'Smooth Jazz' },
-  { id: 'classical', name: 'Classical', genre: 'Orchestral' }
+  { 
+    id: 'lofi', 
+    name: 'Lofi Girl 24/7', 
+    genre: 'Chill Beats', 
+    url: 'https://play.streamafrica.net/lofiradio',
+    desc: 'Relaxing study and ambient chill beats'
+  },
+  { 
+    id: 'chillhop', 
+    name: 'ChillHop HQ', 
+    genre: 'Jazz & Beats', 
+    url: 'https://streams.ilovemusic.de/iloveradio17.mp3',
+    desc: 'Laid-back boom bap, hip-hop and grooves'
+  },
+  { 
+    id: 'synthwave', 
+    name: 'Nightwave Plaza', 
+    genre: 'Synth & Vaporwave', 
+    url: 'https://radio.plaza.one/mp3',
+    desc: 'Nostalgic 80s retro synth and vaporwave'
+  },
+  { 
+    id: 'cyberpunk', 
+    name: 'Tokyo Cyberpunk', 
+    genre: 'Darksynth', 
+    url: 'https://stream.nightride.fm/darksynth.mp3',
+    desc: 'Futuristic electronic darksynth and bass'
+  },
+  { 
+    id: 'anime', 
+    name: 'Anime Lo-Fi', 
+    genre: 'Soundtracks & Lofi', 
+    url: 'https://stream.laut.fm/anime',
+    desc: 'Peaceful anime piano covers and beats'
+  },
+  { 
+    id: 'gaming', 
+    name: 'Gaming OST', 
+    genre: 'Chiptune & EDM', 
+    url: 'https://stream.laut.fm/gamemusic',
+    desc: 'Classic game soundtracks and electronic'
+  },
+  { 
+    id: 'jazz', 
+    name: 'Smooth Jazz Club', 
+    genre: 'Late Night Jazz', 
+    url: 'https://stream.laut.fm/jazz',
+    desc: 'Warm acoustic saxophone and jazz piano'
+  },
+  { 
+    id: 'ambient', 
+    name: 'Midnight Chill', 
+    genre: 'Deep Ambient', 
+    url: 'https://stream.laut.fm/lofi',
+    desc: 'Low-tempo midnight meditation vibes'
+  }
 ];
 
 export default function App() {
@@ -23,23 +72,21 @@ export default function App() {
   const [copiedCmd, setCopiedCmd] = useState('');
   const [copiedClone, setCopiedClone] = useState(false);
 
-  // Interactive Demo Simulator State (Pure Client-side, No Network calls)
-  const [demoStation, setDemoStation] = useState('lofi');
-  const [demoVolume, setDemoVolume] = useState(80);
-  const [demoEmbedTitle, setDemoEmbedTitle] = useState('Welcome to Prometheus Core');
-  const [demoEmbedDesc, setDemoEmbedDesc] = useState('Fully customizable open-source Discord bot hosted on your own server.');
-  const [demoEmbedColor, setDemoEmbedColor] = useState('#ffffff');
-  
-  const [demoToggles, setDemoToggles] = useState({
-    antiRaid: true,
-    blockInvites: true,
-    tickets: true,
-    leveling: true,
-    economy: true,
-    auditLogging: true,
-    joinToCreate: true,
-    aiAssistant: true
-  });
+  // Live Radio State with REAL HTML5 Audio Playback
+  const [activeStationId, setActiveStationId] = useState('lofi');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioVolume, setAudioVolume] = useState(70);
+  const [audioBuffering, setAudioBuffering] = useState(false);
+  const [audioError, setAudioError] = useState('');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Hero Interactive Discord Terminal State
+  const [heroActiveCmd, setHeroActiveCmd] = useState('help');
+
+  // Embed Customizer Demo
+  const [demoEmbedTitle, setDemoEmbedTitle] = useState('Server Announcement');
+  const [demoEmbedDesc, setDemoEmbedDesc] = useState('Welcome to our Discord server! Use /help to see all 93 available commands.');
+  const [demoEmbedColor, setDemoEmbedColor] = useState('#5865F2');
 
   const categories = ['All', ...Array.from(new Set(COMMANDS_DATA.map(c => c.category)))];
 
@@ -49,6 +96,64 @@ export default function App() {
     const matchesCategory = cmdCategoryFilter === 'All' || c.category === cmdCategoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  // Handle Audio Stream Switching and Playback
+  const currentStation = RADIO_STATIONS.find(s => s.id === activeStationId) || RADIO_STATIONS[0];
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = audioVolume / 100;
+    }
+  }, [audioVolume]);
+
+  const handleSelectStation = (stationId: string) => {
+    setActiveStationId(stationId);
+    setAudioError('');
+    const targetStation = RADIO_STATIONS.find(s => s.id === stationId);
+    if (!targetStation) return;
+
+    if (audioRef.current) {
+      audioRef.current.src = targetStation.url;
+      setAudioBuffering(true);
+      audioRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setAudioBuffering(false);
+        })
+        .catch(err => {
+          setIsPlaying(false);
+          setAudioBuffering(false);
+          setAudioError('Stream blocked or loading error: ' + err.message);
+        });
+    }
+  };
+
+  const togglePlayAudio = () => {
+    if (!audioRef.current) return;
+    setAudioError('');
+
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      if (!audioRef.current.src || audioRef.current.src !== currentStation.url) {
+        audioRef.current.src = currentStation.url;
+      }
+      setAudioBuffering(true);
+      audioRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setAudioBuffering(false);
+        })
+        .catch(err => {
+          setIsPlaying(false);
+          setAudioBuffering(false);
+          setAudioError('Could not start stream: ' + err.message);
+        });
+    }
+  };
 
   const copyToClipboard = (text: string, isCommand = true) => {
     if (typeof navigator !== 'undefined') {
@@ -66,11 +171,32 @@ export default function App() {
   return (
     <div className="min-h-screen bg-black text-neutral-200 flex flex-col font-sans selection:bg-white selection:text-black">
       
-      {/* 1. Vercel Top Navigation Bar */}
-      <header className="h-16 border-b border-white/10 px-6 md:px-12 flex items-center justify-between bg-black/80 backdrop-blur-md sticky top-0 z-50">
+      {/* Hidden Audio Element for 24/7 Radio Playback */}
+      <audio
+        ref={audioRef}
+        preload="none"
+        onWaiting={() => setAudioBuffering(true)}
+        onPlaying={() => {
+          setAudioBuffering(false);
+          setIsPlaying(true);
+        }}
+        onError={() => {
+          setAudioBuffering(false);
+          setIsPlaying(false);
+          setAudioError('Playback error. Click play again or pick another station.');
+        }}
+      />
+
+      {/* 1. Header Navigation */}
+      <header className="h-16 border-b border-white/10 px-6 md:px-12 flex items-center justify-between bg-black/85 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-white text-black flex items-center justify-center font-bold text-sm tracking-tighter">
-            ▲
+          {/* Bot Avatar Logo on Black Background */}
+          <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/15 bg-neutral-950 flex items-center justify-center shrink-0">
+            <img 
+              src="/bot.png" 
+              alt="Prometheus Bot Logo" 
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="flex items-center gap-2">
             <span className="font-semibold text-white text-sm tracking-tight">Prometheus</span>
@@ -85,84 +211,238 @@ export default function App() {
           <a href="#commands" className="hover:text-white transition-colors duration-150">
             Commands <span className="font-mono text-[10px] text-neutral-500">({COMMANDS_DATA.length})</span>
           </a>
+          <a href="#radio-player" className="hover:text-white transition-colors duration-150 flex items-center gap-1.5">
+            <span>24/7 Radio</span>
+            {isPlaying && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            )}
+          </a>
           <a href="#self-host" className="hover:text-white transition-colors duration-150">Self-Hosting</a>
-          <a href="#preview" className="hover:text-white transition-colors duration-150">System Demo</a>
         </nav>
 
         <div className="flex items-center gap-3">
+          {/* Star on GitHub Button */}
           <a
             href={GITHUB_REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3.5 py-1.5 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-colors flex items-center gap-1.5"
+            className="px-3.5 py-1.5 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm"
           >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-            </svg>
-            <span>GitHub</span>
-            <span className="text-[10px]">↗</span>
+            <span className="text-amber-500 font-bold text-sm">★</span>
+            <span>Star on GitHub</span>
           </a>
         </div>
       </header>
 
-      {/* 2. Hero Section */}
-      <section className="relative py-24 px-6 text-center max-w-4xl mx-auto flex flex-col items-center vercel-grid">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/[0.03] rounded-full blur-3xl pointer-events-none -z-10" />
+      {/* 2. Upgraded Section 1 (Hero Showcase) */}
+      <section className="relative py-16 md:py-24 px-6 max-w-6xl mx-auto w-full">
+        {/* Glow backdrop */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[350px] bg-white/[0.03] rounded-full blur-3xl pointer-events-none -z-10" />
 
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-950 border border-white/10 text-xs text-neutral-400 mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-          <span className="font-mono text-[11px] tracking-tight">SELF-HOSTED DISCORD BOT • 93 SLASH COMMANDS • OFFLINE FIRST</span>
-        </div>
-
-        <h1 className="text-4xl md:text-6xl font-medium text-white tracking-tight leading-[1.15]">
-          Your private Discord bot. <br />
-          Built for self-hosted precision.
-        </h1>
-
-        <p className="mt-6 text-base md:text-lg text-neutral-400 max-w-2xl font-light leading-relaxed">
-          Prometheus Core is a fully open-source Discord bot platform. Clone the codebase, host it privately on your own hardware or VPS, and keep your data, tokens, and community completely under your control.
-        </p>
-
-        {/* Action CTAs */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-          <a
-            href={GITHUB_REPO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-2.5 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-all shadow-sm flex items-center gap-2"
-          >
-            <span>Clone Repository on GitHub</span>
-            <span>↗</span>
-          </a>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          <a
-            href="#self-host"
-            className="px-6 py-2.5 rounded-md bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium border border-white/10 transition-colors flex items-center gap-2"
-          >
-            <span>Self-Hosting Guide</span>
-            <span>↓</span>
-          </a>
-        </div>
-
-        {/* 1-Click Terminal Snippet */}
-        <div className="mt-10 w-full max-w-xl text-left">
-          <div className="rounded-lg bg-neutral-950 border border-white/10 p-3.5 flex items-center justify-between font-mono text-xs">
-            <div className="flex items-center gap-2 text-neutral-300 overflow-x-auto whitespace-nowrap">
-              <span className="text-neutral-500 select-none">$</span>
-              <span>git clone https://github.com/carbonthecoder/prometheus-core.git</span>
+          {/* Left Column: Heading, Bio, and Actions */}
+          <div className="lg:col-span-7 space-y-6 text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-950 border border-white/10 text-xs text-neutral-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+              <span className="font-mono text-[11px] tracking-tight">SELF-HOSTED DISCORD BOT • 93 COMMANDS • OFFLINE FIRST</span>
             </div>
-            <button
-              onClick={() => copyToClipboard('git clone https://github.com/carbonthecoder/prometheus-core.git', false)}
-              className="ml-3 px-2.5 py-1 rounded bg-neutral-900 hover:bg-neutral-800 border border-white/10 text-neutral-400 hover:text-white transition-colors shrink-0 text-[11px]"
-              title="Copy clone command"
-            >
-              {copiedClone ? '✓ Copied' : 'Copy'}
-            </button>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-white tracking-tight leading-[1.12]">
+              Your private Discord bot. <br />
+              Zero dependencies.
+            </h1>
+
+            <p className="text-sm md:text-base text-neutral-400 font-light leading-relaxed max-w-xl">
+              Prometheus Core is a self-hosted, modular Discord infrastructure suite. Clone the repository, configure your environment variables, and run 93 slash commands, 24/7 HD radio streams, tickets, leveling, and moderation entirely on your own server.
+            </p>
+
+            {/* CTAs without arrow emojis */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <a
+                href={GITHUB_REPO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-5 py-2.5 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-all shadow-sm flex items-center gap-2"
+              >
+                <span className="text-amber-500 font-bold">★</span>
+                <span>Star on GitHub</span>
+              </a>
+
+              <button
+                onClick={() => copyToClipboard('git clone https://github.com/carbonthecoder/prometheus-core.git', false)}
+                className="px-4 py-2.5 rounded-md bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium border border-white/10 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-3.5 h-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth="2"></path>
+                </svg>
+                <span>{copiedClone ? '✓ Clone Command Copied' : 'Clone Repository'}</span>
+              </button>
+
+              <a
+                href="#commands"
+                className="px-4 py-2.5 rounded-md bg-neutral-950 hover:bg-neutral-900 text-neutral-400 hover:text-white text-xs font-medium border border-white/10 transition-colors"
+              >
+                Browse 93 Commands
+              </a>
+            </div>
+
+            {/* Terminal Clone Snippet */}
+            <div className="pt-2">
+              <div className="rounded-lg bg-neutral-950 border border-white/10 p-3 flex items-center justify-between font-mono text-xs max-w-lg">
+                <div className="flex items-center gap-2 text-neutral-300 overflow-x-auto whitespace-nowrap">
+                  <span className="text-neutral-500 select-none">$</span>
+                  <span>git clone https://github.com/carbonthecoder/prometheus-core.git</span>
+                </div>
+                <button
+                  onClick={() => copyToClipboard('git clone https://github.com/carbonthecoder/prometheus-core.git', false)}
+                  className="ml-3 px-2 py-1 rounded bg-neutral-900 hover:bg-neutral-800 border border-white/10 text-neutral-400 hover:text-white transition-colors shrink-0 text-[11px]"
+                >
+                  {copiedClone ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+            </div>
+
+            {/* Tech Badges */}
+            <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-neutral-500 pt-2">
+              <span className="px-2 py-0.5 rounded bg-neutral-950 border border-white/10 text-neutral-400">Node.js 18+</span>
+              <span className="px-2 py-0.5 rounded bg-neutral-950 border border-white/10 text-neutral-400">Discord.js v14</span>
+              <span className="px-2 py-0.5 rounded bg-neutral-950 border border-white/10 text-neutral-400">MongoDB</span>
+              <span className="px-2 py-0.5 rounded bg-neutral-950 border border-white/10 text-neutral-400">Docker</span>
+              <span className="px-2 py-0.5 rounded bg-neutral-950 border border-white/10 text-neutral-400">MIT License</span>
+            </div>
+          </div>
+
+          {/* Right Column: Hero Bot Mascot Card + Interactive Discord Simulator */}
+          <div className="lg:col-span-5 space-y-4">
+            
+            {/* Mascot Showcase Card */}
+            <div className="rounded-xl bg-neutral-950 border border-white/10 p-4 relative overflow-hidden shadow-2xl">
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/15 bg-black shrink-0 relative group">
+                  <img 
+                    src="/bot.png" 
+                    alt="Prometheus Bot" 
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-black"></div>
+                </div>
+
+                <div className="overflow-hidden">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-semibold text-sm">Prometheus Core</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#5865F2] text-white font-bold tracking-wider">
+                      BOT
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-400 mt-1 font-light line-clamp-2">
+                    Autonomous Neural Discord Agent with 93 commands and real-time audio.
+                  </p>
+                  <div className="flex items-center gap-3 mt-2 text-[10px] font-mono text-neutral-500">
+                    <span>PING: 18ms</span>
+                    <span>•</span>
+                    <span className="text-emerald-400">STATUS: READY</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive Command Tabs Simulator */}
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <div className="text-[10px] font-mono uppercase text-neutral-500 mb-2">
+                  Test Command Response:
+                </div>
+                <div className="grid grid-cols-4 gap-1.5 mb-3">
+                  {[
+                    { id: 'help', label: '/help' },
+                    { id: 'radio', label: '/radio' },
+                    { id: 'stats', label: '/stats' },
+                    { id: 'audit', label: '/purge' }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setHeroActiveCmd(tab.id)}
+                      className={`px-2 py-1 rounded text-xs font-mono transition-colors border ${
+                        heroActiveCmd === tab.id
+                          ? 'bg-white text-black font-semibold border-white'
+                          : 'bg-black text-neutral-400 border-white/10 hover:border-white/25'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Simulated Discord Embed Output */}
+                <div className="p-3 rounded-lg bg-black border border-white/10 font-mono text-xs space-y-2">
+                  {heroActiveCmd === 'help' && (
+                    <div>
+                      <div className="flex items-center gap-1.5 text-emerald-400 text-[11px] font-bold">
+                        <span>●</span>
+                        <span>Prometheus Help Registry</span>
+                      </div>
+                      <div className="text-neutral-300 text-[11px] mt-1">
+                        93 commands loaded across 14 modules (Core, Moderation, Economy, Radio, Tools, AI).
+                      </div>
+                      <div className="text-[10px] text-neutral-500 mt-1">
+                        Use /commands in Discord for full parameter inspection.
+                      </div>
+                    </div>
+                  )}
+
+                  {heroActiveCmd === 'radio' && (
+                    <div>
+                      <div className="flex items-center gap-1.5 text-indigo-400 text-[11px] font-bold">
+                        <span>📻</span>
+                        <span>24/7 HD Music Radio Connected</span>
+                      </div>
+                      <div className="text-neutral-300 text-[11px] mt-1">
+                        Now Streaming: <strong className="text-white">{currentStation.name}</strong> ({currentStation.genre})
+                      </div>
+                      <div className="text-[10px] text-neutral-500 mt-1">
+                        Crystal-clear audio pipeline via @discordjs/voice.
+                      </div>
+                    </div>
+                  )}
+
+                  {heroActiveCmd === 'stats' && (
+                    <div>
+                      <div className="flex items-center gap-1.5 text-amber-400 text-[11px] font-bold">
+                        <span>⚡</span>
+                        <span>System Diagnostics</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1 text-[11px] text-neutral-300 mt-1">
+                        <span>Node: v20.10.0</span>
+                        <span>D.js: v14.14.0</span>
+                        <span>Latency: 18ms</span>
+                        <span>Memory: 42 MB</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {heroActiveCmd === 'audit' && (
+                    <div>
+                      <div className="flex items-center gap-1.5 text-rose-400 text-[11px] font-bold">
+                        <span>🛡️</span>
+                        <span>Bulk Message Purge</span>
+                      </div>
+                      <div className="text-neutral-300 text-[11px] mt-1">
+                        Purged 25 messages from #general by Staff Moderator.
+                      </div>
+                      <div className="text-[10px] text-neutral-500 mt-1">
+                        Logged in server audit channel #mod-logs.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* 3. Realtime Telemetry & Spec Strip */}
+      {/* 3. Specs and Metrics Strip */}
       <section className="border-y border-white/10 bg-neutral-950/60 py-6 px-6">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-4 text-center font-mono">
           <div>
@@ -174,15 +454,15 @@ export default function App() {
             <div className="text-base font-semibold text-neutral-300 mt-1">Modular Handlers</div>
           </div>
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-neutral-500">Radio Audio</div>
+            <div className="text-[11px] uppercase tracking-wider text-neutral-500">Radio Engine</div>
             <div className="text-base font-semibold text-emerald-400 mt-1 flex items-center justify-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span>8 HD Streams</span>
+              <span>8 Live Streams</span>
             </div>
           </div>
           <div>
             <div className="text-[11px] uppercase tracking-wider text-neutral-500">Deployment</div>
-            <div className="text-base font-semibold text-white mt-1">Docker / Node.js</div>
+            <div className="text-base font-semibold text-white mt-1">Self-Hosted / VPS</div>
           </div>
           <div className="col-span-2 md:col-span-1">
             <div className="text-[11px] uppercase tracking-wider text-neutral-500">License</div>
@@ -194,8 +474,8 @@ export default function App() {
       {/* 4. Feature Matrix */}
       <section id="features" className="py-20 px-6 md:px-12 max-w-6xl mx-auto">
         <div className="text-center mb-14">
-          <h2 className="text-2xl md:text-3xl font-medium text-white tracking-tight">Enterprise Infrastructure for Your Discord Server</h2>
-          <p className="text-xs text-neutral-400 mt-2 font-mono">Every system runs directly in your private bot instance without third-party paywalls.</p>
+          <h2 className="text-2xl md:text-3xl font-medium text-white tracking-tight">Complete Server Infrastructure in One Codebase</h2>
+          <p className="text-xs text-neutral-400 mt-2 font-mono">Every system runs directly in your private bot instance without monthly subscriptions.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -221,7 +501,109 @@ export default function App() {
         </div>
       </section>
 
-      {/* 5. Slash Commands Explorer */}
+      {/* 5. LIVE 24/7 RADIO STATION WITH REAL AUDIO PLAYBACK */}
+      <section id="radio-player" className="py-20 px-6 md:px-12 max-w-5xl mx-auto border-t border-white/10">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-950 border border-white/10 text-xs text-neutral-400 mb-3 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>LIVE BROWSER AUDIO PLAYER</span>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-medium text-white tracking-tight">24/7 HD Radio Streams</h2>
+          <p className="text-xs text-neutral-400 mt-1 font-mono">
+            Click any station below to hear the actual live audio stream playing in your browser.
+          </p>
+        </div>
+
+        {/* Player Console */}
+        <div className="rounded-xl bg-neutral-950 border border-white/15 p-6 space-y-6 shadow-2xl max-w-3xl mx-auto">
+          
+          {/* Currently Playing Card */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg bg-black border border-white/10">
+            <div className="flex items-center gap-4">
+              {/* Play/Pause Button */}
+              <button
+                onClick={togglePlayAudio}
+                className="w-12 h-12 rounded-full bg-white hover:bg-neutral-200 text-black flex items-center justify-center transition-transform active:scale-95 shrink-0 shadow-lg"
+                title={isPlaying ? 'Pause' : 'Play'}
+              >
+                {audioBuffering ? (
+                  <span className="text-xs font-mono font-bold animate-spin">⌛</span>
+                ) : isPlaying ? (
+                  <span className="text-base font-bold">⏸</span>
+                ) : (
+                  <span className="text-base font-bold ml-0.5">▶</span>
+                )}
+              </button>
+
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-white text-sm">{currentStation.name}</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-900 border border-white/10 text-emerald-400">
+                    LIVE
+                  </span>
+                </div>
+                <div className="text-xs text-neutral-400 font-light mt-0.5">
+                  {currentStation.desc}
+                </div>
+              </div>
+            </div>
+
+            {/* Audio Waveform / Status Pill */}
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="flex items-center gap-2 text-xs font-mono text-neutral-400">
+                <span>Volume:</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={audioVolume}
+                  onChange={(e) => setAudioVolume(Number(e.target.value))}
+                  className="accent-white cursor-pointer w-24"
+                />
+                <span className="text-neutral-500 w-8 text-right">{audioVolume}%</span>
+              </div>
+            </div>
+          </div>
+
+          {audioError && (
+            <div className="p-3 rounded-md bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs font-mono">
+              {audioError}
+            </div>
+          )}
+
+          {/* 8 Stations Selector Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+            {RADIO_STATIONS.map((st) => {
+              const isSelected = activeStationId === st.id;
+              return (
+                <button
+                  key={st.id}
+                  onClick={() => handleSelectStation(st.id)}
+                  className={`p-3 rounded-lg text-left transition-all border ${
+                    isSelected
+                      ? 'bg-neutral-900 border-white text-white shadow-md'
+                      : 'bg-black border-white/10 text-neutral-400 hover:border-white/25 hover:text-neutral-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-white truncate">{st.name}</span>
+                    {isSelected && isPlaying && (
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    )}
+                  </div>
+                  <div className="text-[10px] font-mono text-neutral-500 mt-1">{st.genre}</div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="text-center text-[11px] font-mono text-neutral-500 pt-2 border-t border-white/10">
+            Powered by HTTP live audio streams. In Discord, Prometheus plays these in voice channels via <code className="text-neutral-400">/radio</code>.
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Slash Commands Explorer */}
       <section id="commands" className="py-20 px-6 md:px-12 max-w-6xl mx-auto border-t border-white/10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
@@ -277,7 +659,7 @@ export default function App() {
                     </span>
                     {isJustCopied && (
                       <span className="text-[10px] font-mono text-emerald-400 font-bold">
-                        ✓
+                        ✓ Copied
                       </span>
                     )}
                   </div>
@@ -291,7 +673,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 6. Self-Hosting Guide */}
+      {/* 7. Self-Hosting Guide */}
       <section id="self-host" className="py-20 px-6 md:px-12 max-w-5xl mx-auto border-t border-white/10">
         <div className="text-center mb-12">
           <h2 className="text-2xl md:text-3xl font-medium text-white tracking-tight">How to Self-Host Prometheus</h2>
@@ -345,115 +727,28 @@ export default function App() {
         </div>
       </section>
 
-      {/* 7. Interactive Feature Playground / Simulator */}
-      <section id="preview" className="py-20 px-6 md:px-12 max-w-5xl mx-auto border-t border-white/10">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-medium text-white tracking-tight">Interactive Bot Feature Preview</h2>
-          <p className="text-xs text-neutral-400 mt-1 font-mono">Test and preview bot modules right here in your browser.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Card A: 24/7 HD Radio Station Selector */}
-          <div className="p-6 rounded-lg bg-neutral-950 border border-white/10 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-white">24/7 HD Radio Streams</h3>
-                <p className="text-xs text-neutral-400 font-mono">8 streams playing continuously in voice</p>
-              </div>
-              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded">
-                ● Ready
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              {RADIO_STATIONS.map((st) => (
-                <button
-                  key={st.id}
-                  onClick={() => setDemoStation(st.id)}
-                  className={`p-2.5 rounded text-left transition-colors text-xs font-mono border ${
-                    demoStation === st.id
-                      ? 'bg-neutral-900 border-white text-white'
-                      : 'bg-black border-white/10 text-neutral-400 hover:border-white/20'
-                  }`}
-                >
-                  <div className="font-semibold text-white">{st.name}</div>
-                  <div className="text-[10px] text-neutral-500">{st.genre}</div>
-                </button>
-              ))}
-            </div>
-
-            <div className="p-3 rounded bg-black border border-white/10 flex items-center justify-between text-xs font-mono">
-              <span className="text-neutral-400">Volume: {demoVolume}%</span>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={demoVolume}
-                onChange={(e) => setDemoVolume(Number(e.target.value))}
-                className="accent-white cursor-pointer w-32"
-              />
-            </div>
-          </div>
-
-          {/* Card B: Discord Embed Broadcaster */}
-          <div className="p-6 rounded-lg bg-neutral-950 border border-white/10 space-y-4">
-            <div>
-              <h3 className="text-sm font-semibold text-white">Rich Embed Generator</h3>
-              <p className="text-xs text-neutral-400 font-mono">Dispatched by /embedbuilder</p>
-            </div>
-
-            <div className="space-y-2">
-              <input
-                type="text"
-                value={demoEmbedTitle}
-                onChange={(e) => setDemoEmbedTitle(e.target.value)}
-                placeholder="Embed title..."
-                className="w-full bg-black border border-white/10 rounded p-2 text-xs text-white outline-none font-mono"
-              />
-              <textarea
-                rows={2}
-                value={demoEmbedDesc}
-                onChange={(e) => setDemoEmbedDesc(e.target.value)}
-                placeholder="Embed description..."
-                className="w-full bg-black border border-white/10 rounded p-2 text-xs text-white outline-none font-mono"
-              />
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-neutral-400">Color:</span>
-                <input
-                  type="color"
-                  value={demoEmbedColor}
-                  onChange={(e) => setDemoEmbedColor(e.target.value)}
-                  className="w-8 h-6 bg-transparent cursor-pointer rounded"
-                />
-              </div>
-            </div>
-
-            {/* Embed Preview */}
-            <div className="p-3.5 rounded bg-neutral-900/90 border-l-4" style={{ borderLeftColor: demoEmbedColor }}>
-              <div className="text-xs font-semibold text-white">{demoEmbedTitle || 'Title'}</div>
-              <div className="text-xs text-neutral-300 font-light mt-1 whitespace-pre-wrap">{demoEmbedDesc || 'Description'}</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* 8. Vercel Style Footer */}
       <footer className="mt-auto border-t border-white/10 py-12 px-6 text-center text-xs text-neutral-500 font-mono">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-white">▲</span>
+            <div className="w-5 h-5 rounded overflow-hidden border border-white/10 bg-neutral-950 shrink-0">
+              <img src="/bot.png" alt="Bot Logo" className="w-full h-full object-cover" />
+            </div>
             <span className="text-neutral-300 font-sans font-semibold">Prometheus Core</span>
             <span>—</span>
             <span>Self-Hosted Discord Bot Platform</span>
           </div>
 
           <div className="flex items-center gap-6">
-            <a href={GITHUB_REPO_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-              GitHub Repository ↗
+            <a href={GITHUB_REPO_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center gap-1">
+              <span className="text-amber-500">★</span>
+              <span>Star on GitHub</span>
             </a>
             <a href="#commands" className="hover:text-white transition-colors">
               Commands
+            </a>
+            <a href="#radio-player" className="hover:text-white transition-colors">
+              Radio
             </a>
             <a href="#self-host" className="hover:text-white transition-colors">
               Self-Host
