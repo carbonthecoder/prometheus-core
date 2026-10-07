@@ -1,38 +1,53 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --background: #000000;
+    --foreground: #ededed;
+    --muted: #888888;
+    --border: rgba(255, 255, 255, 0.1);
+    --card: #0a0a0a;
+    --card-hover: #121212;
+  }
+
   body {
-    background-color: #0b0e14;
-    color: #f0f6fc;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #000000;
+    color: #ededed;
+    font-family: -apple-system, BlinkMacSystemFont, 'Geist', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 0;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: #ffffff;
+    color: #000000;
   }
 }
 
-/* Custom Scrollbar */
+/* Minimalist Vercel-style Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0e14;
+  background: #000000;
 }
 ::-webkit-scrollbar-thumb {
-  background: #21262d;
-  border-radius: 4px;
+  background: #222222;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #30363d;
+  background: #333333;
 }
 
-/* Discord Style Toggle Switch */
+/* Vercel Style Toggle Switch */
 .switch {
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 24px;
+  width: 38px;
+  height: 22px;
   flex-shrink: 0;
 }
 
@@ -49,27 +64,43 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #30363d;
-  transition: 0.2s ease;
-  border-radius: 24px;
+  background-color: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 9999px;
 }
 
 .slider:before {
   position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.2s ease;
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #888888;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: 50%;
 }
 
 input:checked + .slider {
-  background-color: #5865F2;
+  background-color: #ffffff;
+  border-color: #ffffff;
 }
 
 input:checked + .slider:before {
-  transform: translateX(20px);
+  background-color: #000000;
+  transform: translateX(16px);
+}
+
+/* Vercel Grid Background pattern */
+.vercel-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+
+.vercel-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
