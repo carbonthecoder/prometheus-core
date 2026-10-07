@@ -79,7 +79,7 @@ export default function App() {
       </header>
 
       {/* 2. Hero Section (Centered Clean Vercel Layout) */}
-      <section className="relative py-24 md:py-32 px-6 text-center max-w-4xl mx-auto flex flex-col items-center vercel-grid w-full">
+      <section className="relative py-24 md:py-32 px-6 text-center max-w-5xl mx-auto flex flex-col items-center vercel-grid w-full">
         {/* Glow backdrop */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[380px] bg-white/[0.04] rounded-full blur-3xl pointer-events-none -z-10" />
 
@@ -90,9 +90,9 @@ export default function App() {
         </div>
 
         {/* Crisp High-Contrast Headline */}
-        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-medium tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-100 to-neutral-400 leading-[1.08]">
-          Your private Discord bot. <br />
-          Zero dependencies.
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-100 to-neutral-400 leading-[1.12]">
+          <span className="inline-block sm:whitespace-nowrap">Your private Discord bot.</span> <br />
+          <span className="inline-block sm:whitespace-nowrap">Zero dependencies.</span>
         </h1>
 
         {/* Centered Subtitle */}
