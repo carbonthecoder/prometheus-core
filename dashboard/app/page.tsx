@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { COMMANDS_DATA, BotCommand } from '../data/commands';
+import { COMMANDS_DATA, BotCommand } from '../lib/commands';
 
 const GITHUB_REPO_URL = 'https://github.com/carbonthecoder/prometheus-core';
 
