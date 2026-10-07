@@ -78,54 +78,25 @@ export default function App() {
         </div>
       </header>
 
-      {/* 2. Hero Section (Centered Layout with Clean Mascot Card) */}
-      <section className="relative py-20 md:py-28 px-6 text-center max-w-4xl mx-auto flex flex-col items-center vercel-grid w-full">
+      {/* 2. Hero Section (Centered Clean Vercel Layout) */}
+      <section className="relative py-24 md:py-32 px-6 text-center max-w-4xl mx-auto flex flex-col items-center vercel-grid w-full">
         {/* Glow backdrop */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[350px] bg-white/[0.03] rounded-full blur-3xl pointer-events-none -z-10" />
-
-        {/* Clean Bot Mascot Card (Pic 1 with Pic 2 details removed) */}
-        <div className="rounded-2xl bg-neutral-950 border border-white/10 p-4 mb-8 shadow-2xl flex items-center gap-4 text-left max-w-md w-full">
-          <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/15 bg-black shrink-0 relative group">
-            <img 
-              src="/bot.png" 
-              alt="Prometheus Bot" 
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            <div className="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-black"></div>
-          </div>
-
-          <div className="overflow-hidden">
-            <div className="flex items-center gap-2">
-              <span className="text-white font-semibold text-sm">Prometheus Core</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#5865F2] text-white font-bold tracking-wider">
-                BOT
-              </span>
-            </div>
-            <p className="text-xs text-neutral-400 mt-1 font-light line-clamp-2">
-              Autonomous Neural Discord Agent with 93 commands and real-time audio.
-            </p>
-            <div className="flex items-center gap-2.5 mt-2 text-[10px] font-mono text-neutral-500">
-              <span>PING: 18ms</span>
-              <span>•</span>
-              <span className="text-emerald-400">STATUS: READY</span>
-            </div>
-          </div>
-        </div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[380px] bg-white/[0.04] rounded-full blur-3xl pointer-events-none -z-10" />
 
         {/* Centered Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-950 border border-white/10 text-xs text-neutral-400 mb-6">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-          <span className="font-mono text-[11px] tracking-tight">SELF-HOSTED DISCORD BOT • 93 COMMANDS • OFFLINE FIRST</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-950 border border-white/10 text-xs text-neutral-400 mb-8 shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+          <span className="font-mono text-[11px] tracking-tight text-neutral-300">SELF-HOSTED DISCORD BOT • 93 COMMANDS • OFFLINE FIRST</span>
         </div>
 
-        {/* Centered Headline */}
-        <h1 className="text-4xl md:text-6xl font-medium text-white tracking-tight leading-[1.15]">
+        {/* Crisp High-Contrast Headline */}
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-medium tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-100 to-neutral-400 leading-[1.08]">
           Your private Discord bot. <br />
           Zero dependencies.
         </h1>
 
         {/* Centered Subtitle */}
-        <p className="mt-6 text-base md:text-lg text-neutral-400 max-w-2xl font-light leading-relaxed">
+        <p className="mt-7 text-base md:text-lg text-neutral-400 max-w-2xl font-light leading-relaxed">
           Prometheus Core is a self-hosted, modular Discord infrastructure suite. Clone the repository, configure your environment variables, and run 93 slash commands, dynamic voice rooms, tickets, leveling, and moderation entirely on your own server.
         </p>
 
