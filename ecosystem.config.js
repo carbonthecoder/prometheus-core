@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'prometheus-bot',
-      cwd: './bot/TitanBot-main',
+      cwd: './bot/prometheus',
       script: 'src/app.js',
       instances: 1,
       autorestart: true,

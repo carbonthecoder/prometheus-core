@@ -80,9 +80,6 @@ export default function App() {
   const [audioError, setAudioError] = useState('');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Hero Interactive Discord Terminal State
-  const [heroActiveCmd, setHeroActiveCmd] = useState('help');
-
   // Embed Customizer Demo
   const [demoEmbedTitle, setDemoEmbedTitle] = useState('Server Announcement');
   const [demoEmbedDesc, setDemoEmbedDesc] = useState('Welcome to our Discord server! Use /help to see all 93 available commands.');
@@ -314,11 +311,10 @@ export default function App() {
             </div>
           </div>
 
-          {/* Right Column: Hero Bot Mascot Card + Interactive Discord Simulator */}
+          {/* Right Column: Hero Bot Mascot Card */}
           <div className="lg:col-span-5 space-y-4">
-            
             {/* Mascot Showcase Card */}
-            <div className="rounded-xl bg-neutral-950 border border-white/10 p-4 relative overflow-hidden shadow-2xl">
+            <div className="rounded-xl bg-neutral-950 border border-white/10 p-5 relative overflow-hidden shadow-2xl">
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/15 bg-black shrink-0 relative group">
                   <img 
@@ -347,97 +343,26 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Interactive Command Tabs Simulator */}
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <div className="text-[10px] font-mono uppercase text-neutral-500 mb-2">
-                  Test Command Response:
+              {/* Bot Core Highlights */}
+              <div className="mt-5 pt-4 border-t border-white/10 space-y-2.5 font-mono text-xs">
+                <div className="flex items-center justify-between text-neutral-300 py-1 border-b border-white/5">
+                  <span className="text-neutral-500">SLASH COMMANDS</span>
+                  <span className="font-semibold text-white">93 Loaded</span>
                 </div>
-                <div className="grid grid-cols-4 gap-1.5 mb-3">
-                  {[
-                    { id: 'help', label: '/help' },
-                    { id: 'radio', label: '/radio' },
-                    { id: 'stats', label: '/stats' },
-                    { id: 'audit', label: '/purge' }
-                  ].map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setHeroActiveCmd(tab.id)}
-                      className={`px-2 py-1 rounded text-xs font-mono transition-colors border ${
-                        heroActiveCmd === tab.id
-                          ? 'bg-white text-black font-semibold border-white'
-                          : 'bg-black text-neutral-400 border-white/10 hover:border-white/25'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between text-neutral-300 py-1 border-b border-white/5">
+                  <span className="text-neutral-500">RADIO AUDIO ENGINE</span>
+                  <span className="text-emerald-400 font-medium">8 HD Streams</span>
                 </div>
-
-                {/* Simulated Discord Embed Output */}
-                <div className="p-3 rounded-lg bg-black border border-white/10 font-mono text-xs space-y-2">
-                  {heroActiveCmd === 'help' && (
-                    <div>
-                      <div className="flex items-center gap-1.5 text-emerald-400 text-[11px] font-bold">
-                        <span>●</span>
-                        <span>Prometheus Help Registry</span>
-                      </div>
-                      <div className="text-neutral-300 text-[11px] mt-1">
-                        93 commands loaded across 14 modules (Core, Moderation, Economy, Radio, Tools, AI).
-                      </div>
-                      <div className="text-[10px] text-neutral-500 mt-1">
-                        Use /commands in Discord for full parameter inspection.
-                      </div>
-                    </div>
-                  )}
-
-                  {heroActiveCmd === 'radio' && (
-                    <div>
-                      <div className="flex items-center gap-1.5 text-indigo-400 text-[11px] font-bold">
-                        <span>📻</span>
-                        <span>24/7 HD Music Radio Connected</span>
-                      </div>
-                      <div className="text-neutral-300 text-[11px] mt-1">
-                        Now Streaming: <strong className="text-white">{currentStation.name}</strong> ({currentStation.genre})
-                      </div>
-                      <div className="text-[10px] text-neutral-500 mt-1">
-                        Crystal-clear audio pipeline via @discordjs/voice.
-                      </div>
-                    </div>
-                  )}
-
-                  {heroActiveCmd === 'stats' && (
-                    <div>
-                      <div className="flex items-center gap-1.5 text-amber-400 text-[11px] font-bold">
-                        <span>⚡</span>
-                        <span>System Diagnostics</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-1 text-[11px] text-neutral-300 mt-1">
-                        <span>Node: v20.10.0</span>
-                        <span>D.js: v14.14.0</span>
-                        <span>Latency: 18ms</span>
-                        <span>Memory: 42 MB</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {heroActiveCmd === 'audit' && (
-                    <div>
-                      <div className="flex items-center gap-1.5 text-rose-400 text-[11px] font-bold">
-                        <span>🛡️</span>
-                        <span>Bulk Message Purge</span>
-                      </div>
-                      <div className="text-neutral-300 text-[11px] mt-1">
-                        Purged 25 messages from #general by Staff Moderator.
-                      </div>
-                      <div className="text-[10px] text-neutral-500 mt-1">
-                        Logged in server audit channel #mod-logs.
-                      </div>
-                    </div>
-                  )}
+                <div className="flex items-center justify-between text-neutral-300 py-1 border-b border-white/5">
+                  <span className="text-neutral-500">HOSTING ARCHITECTURE</span>
+                  <span className="text-neutral-200">Self-Hosted</span>
+                </div>
+                <div className="flex items-center justify-between text-neutral-300 py-1">
+                  <span className="text-neutral-500">DATABASE BACKEND</span>
+                  <span className="text-neutral-200">PostgreSQL / Mongo</span>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </section>
@@ -688,7 +613,7 @@ export default function App() {
               Clone the core repository and navigate to the bot directory:
             </p>
             <pre className="p-3 rounded bg-black border border-white/10 font-mono text-xs text-neutral-300 overflow-x-auto">
-              <code>git clone https://github.com/carbonthecoder/prometheus-core.git<br/>cd prometheus-core/bot/TitanBot-main</code>
+              <code>git clone https://github.com/carbonthecoder/prometheus-core.git<br/>cd prometheus-core/bot/prometheus</code>
             </pre>
           </div>
 

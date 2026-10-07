@@ -23,7 +23,7 @@ services:
   # 2. Discord Bot Service
   bot:
     build:
-      context: ./bot/TitanBot-main
+      context: ./bot/prometheus
       dockerfile: Dockerfile
     container_name: prometheus_bot
     restart: always

@@ -1,4 +1,4 @@
-# 🤖 TitanBot Command Registry
+# 🤖 Prometheus Command Registry
 
 
 ### 📂 Birthday

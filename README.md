@@ -36,7 +36,7 @@
 ## 📁 Project Structure
 
 ```
-├── bot/TitanBot-main/        # Discord.js Bot & Express REST API Backend
+├── bot/prometheus/        # Discord.js Bot & Express REST API Backend
 │   ├── src/
 │   │   ├── api/routes.js     # REST API bridge for Dashboard
 │   │   ├── commands/         # 96 Modular Slash Commands
@@ -84,7 +84,7 @@ git clone https://github.com/your-username/prometheus-discord-bot.git
 cd prometheus-discord-bot
 
 # Install bot dependencies
-cd bot/TitanBot-main
+cd bot/prometheus
 npm install
 
 # Install dashboard dependencies
@@ -93,7 +93,7 @@ npm install
 ``
 
 ### 3. Configure Environment Variables
-Create `.env` in `bot/TitanBot-main/`:
+Create `.env` in `bot/prometheus/`:
 ```env
 DISCORD_TOKEN=your_discord_bot_token_here
 GEMINI_API_KEY=your_gemini_api_key_here
@@ -106,7 +106,7 @@ NODE_ENV=development
 ### 4. Run Locally
 **Terminal 1 (Start Discord Bot & API):**
 ```bash
-cd bot/TitanBot-main
+cd bot/prometheus
 npm start
 ```
 
@@ -174,7 +174,7 @@ Oracle Cloud offers an **Always Free ARM VPS** that never shuts down and has ent
    ```bash
    git clone https://github.com/YOUR_USERNAME/prometheus-discord-bot.git
    cd prometheus-discord-bot
-   cd bot/TitanBot-main && cp .env.example .env && nano .env
+   cd bot/prometheus && cp .env.example .env && nano .env
    npm install
    cd ../../dashboard && cp .env.example .env && npm install && npm run build
    cd ..
@@ -193,7 +193,7 @@ Oracle Cloud offers an **Always Free ARM VPS** that never shuts down and has ent
 1. Sign up at [Render.com](https://render.com/).
 2. Click **New +** -> **Web Service** -> Connect your GitHub repo.
 3. Configure the Bot service:
-   - **Root Directory:** `bot/TitanBot-main`
+   - **Root Directory:** `bot/prometheus`
    - **Build Command:** `npm install`
    - **Start Command:** `node src/app.js`
    - **Environment Variables:** Add `DISCORD_TOKEN`, `GEMINI_API_KEY`, `CLIENT_ID`, `PORT=3000`.
@@ -215,7 +215,7 @@ Oracle Cloud offers an **Always Free ARM VPS** that never shuts down and has ent
 
 ### Option 4: Fly.io (Free Tier Allowance)
 1. Install Flyctl: `curl -L https://fly.io/install.sh | sh`
-2. Run `fly launch` in `bot/TitanBot-main/` and deploy with `fly deploy`.
+2. Run `fly launch` in `bot/prometheus/` and deploy with `fly deploy`.
 3. Set secrets: `fly secrets set DISCORD_TOKEN=your_token GEMINI_API_KEY=your_key`.
 
 ---
@@ -251,7 +251,7 @@ For large communities, high music quality, zero latency, and dedicated uptime:
    ```bash
    git clone https://github.com/YOUR_USERNAME/prometheus-discord-bot.git
    cd prometheus-discord-bot
-   nano bot/TitanBot-main/.env
+   nano bot/prometheus/.env
    ```
 4. Start the entire stack (PostgreSQL + Bot + Dashboard):
    ```bash
