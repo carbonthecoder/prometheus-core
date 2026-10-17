@@ -78,29 +78,23 @@ export default function App() {
         </div>
       </header>
 
-      {/* 2. Hero Section (Centered Clean Vercel Layout) */}
-      <section className="relative py-24 md:py-32 px-6 text-center max-w-5xl mx-auto flex flex-col items-center vercel-grid w-full">
+      {/* 2. Hero Section */}
+      <section className="relative py-24 md:py-36 px-6 text-center max-w-5xl mx-auto flex flex-col items-center w-full">
         {/* Glow backdrop */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[380px] bg-white/[0.04] rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[380px] bg-white/[0.03] rounded-full blur-3xl pointer-events-none -z-10" />
 
-        {/* Centered Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-950 border border-white/10 text-xs text-neutral-400 mb-8 shadow-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
-          <span className="font-mono text-[11px] tracking-tight text-neutral-300">SELF-HOSTED DISCORD BOT • 93 COMMANDS • OFFLINE FIRST</span>
-        </div>
-
-        {/* Crisp High-Contrast Headline */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-100 to-neutral-400 leading-[1.12]">
-          <span className="inline-block sm:whitespace-nowrap">Your private Discord bot.</span> <br />
-          <span className="inline-block sm:whitespace-nowrap">Zero dependencies.</span>
+        {/* Headline */}
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-neutral-100 to-neutral-400 leading-[1.1]">
+          Supercharge your<br />
+          <span className="text-white">Discord community</span>
         </h1>
 
-        {/* Centered Subtitle */}
-        <p className="mt-7 text-base md:text-lg text-neutral-400 max-w-2xl font-light leading-relaxed">
-          Prometheus Core is a self-hosted, modular Discord infrastructure suite. Clone the repository, configure your environment variables, and run 93 slash commands, dynamic voice rooms, tickets, leveling, and moderation entirely on your own server.
+        {/* Subtitle */}
+        <p className="mt-6 text-base md:text-lg text-neutral-400 max-w-2xl font-light leading-relaxed">
+          Prometheus Core is an all-in-one, self-hosted Discord infrastructure suite. Clone the repository, configure your environment variables, and manage roles, tickets, progression, automod, dynamic voice rooms, and community analytics across 93 slash commands—entirely on your own server.
         </p>
 
-        {/* Centered Actions */}
+        {/* Actions */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
             href={GITHUB_REPO_URL}
@@ -120,19 +114,19 @@ export default function App() {
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth="2"></rect>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth="2"></path>
             </svg>
-            <span>{copiedClone ? '✓ Clone Command Copied' : 'Clone Repository'}</span>
+            <span>{copiedClone ? '✓ Copied' : 'Clone Repository'}</span>
           </button>
 
           <a
             href="#commands"
             className="px-4 py-2.5 rounded-md bg-neutral-950 hover:bg-neutral-900 text-neutral-400 hover:text-white text-xs font-medium border border-white/10 transition-colors"
           >
-            Browse 93 Commands
+            Browse {COMMANDS_DATA.length} Commands
           </a>
         </div>
 
-        {/* Centered 1-Click Terminal Snippet */}
-        <div className="mt-8 w-full max-w-xl text-left">
+        {/* Terminal Clone Snippet */}
+        <div className="mt-6 w-full max-w-xl text-left">
           <div className="rounded-lg bg-neutral-950 border border-white/10 p-3.5 flex items-center justify-between font-mono text-xs">
             <div className="flex items-center gap-2 text-neutral-300 overflow-x-auto whitespace-nowrap">
               <span className="text-neutral-500 select-none">$</span>
@@ -142,13 +136,13 @@ export default function App() {
               onClick={() => copyToClipboard('git clone https://github.com/carbonthecoder/prometheus-core.git', false)}
               className="ml-3 px-2.5 py-1 rounded bg-neutral-900 hover:bg-neutral-800 border border-white/10 text-neutral-400 hover:text-white transition-colors shrink-0 text-[11px]"
             >
-              {copiedClone ? 'Copied' : 'Copy'}
+              {copiedClone ? 'Copied ✓' : 'Copy'}
             </button>
           </div>
         </div>
 
-        {/* Centered Tech Stack Badges */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono text-neutral-500">
+        {/* Tech Stack Pills */}
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono text-neutral-500">
           <span className="px-2 py-0.5 rounded bg-neutral-950 border border-white/10 text-neutral-400">Node.js 18+</span>
           <span className="px-2 py-0.5 rounded bg-neutral-950 border border-white/10 text-neutral-400">Discord.js v14</span>
           <span className="px-2 py-0.5 rounded bg-neutral-950 border border-white/10 text-neutral-400">MongoDB</span>
