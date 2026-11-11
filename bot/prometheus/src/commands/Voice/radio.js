@@ -10,6 +10,7 @@ import {
     NoSubscriberBehavior
 } from '@discordjs/voice';
 import { spawn } from 'child_process';
+import fs from 'fs';
 import ffmpegPath from 'ffmpeg-static';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed, successEmbed, errorEmbed } from '../../utils/embeds.js';
@@ -65,7 +66,8 @@ export function createHDAudioResource(streamUrl, volume = 0.8) {
         return createAudioResource(streamUrl, { inlineVolume: true });
     }
 
-    const ffmpegProcess = spawn(ffmpegPath, [
+    const resolvedBinary = (ffmpegPath && fs.existsSync(ffmpegPath)) ? ffmpegPath : 'ffmpeg';
+    const ffmpegProcess = spawn(resolvedBinary, [
         '-reconnect', '1',
         '-reconnect_at_eof', '1',
         '-reconnect_streamed', '1',
@@ -77,6 +79,10 @@ export function createHDAudioResource(streamUrl, volume = 0.8) {
         '-ar', '48000',
         '-ac', '2'
     ], { stdio: ['ignore', 'pipe', 'ignore'] });
+
+    ffmpegProcess.on('error', (err) => {
+        logger.error('[RADIO] FFmpeg process error:', err.message);
+    });
 
     const resource = createAudioResource(ffmpegProcess.stdout, {
         inputType: StreamType.Raw,

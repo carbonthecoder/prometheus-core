@@ -65,15 +65,20 @@ export default function App() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {/* Star on GitHub Button */}
+          <a
+            href="/dashboard"
+            className="px-3.5 py-1.5 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm"
+          >
+            <span>Open Dashboard →</span>
+          </a>
           <a
             href={GITHUB_REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3.5 py-1.5 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm"
+            className="px-3.5 py-1.5 rounded-md bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium border border-white/10 transition-colors flex items-center gap-1.5 shadow-sm"
           >
             <span className="text-amber-500 font-bold text-sm">★</span>
-            <span>Star on GitHub</span>
+            <span>Star</span>
           </a>
         </div>
       </header>
@@ -97,13 +102,10 @@ export default function App() {
         {/* Actions */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
-            href={GITHUB_REPO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-5 py-2.5 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-all shadow-sm flex items-center gap-2"
+            href="/dashboard"
+            className="px-5 py-2.5 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-all shadow-sm flex items-center gap-2"
           >
-            <span className="text-amber-500 font-bold">★</span>
-            <span>Star on GitHub</span>
+            <span>Open Dashboard →</span>
           </a>
 
           <button

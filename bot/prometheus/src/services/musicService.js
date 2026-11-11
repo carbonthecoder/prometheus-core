@@ -12,6 +12,8 @@ import { spawn } from 'child_process';
 import ffmpegPath from 'ffmpeg-static';
 import { logger } from '../utils/logger.js';
 
+import fs from 'fs';
+
 class GuildQueue {
   constructor(guildId) {
     this.guildId = guildId;
@@ -76,7 +78,8 @@ class GuildQueue {
     this.currentTrack = track;
 
     try {
-      const ffmpeg = spawn(ffmpegPath, [
+      const resolvedBinary = (ffmpegPath && fs.existsSync(ffmpegPath)) ? ffmpegPath : 'ffmpeg';
+      const ffmpeg = spawn(resolvedBinary, [
         '-reconnect', '1',
         '-reconnect_at_eof', '1',
         '-reconnect_streamed', '1',
@@ -89,6 +92,11 @@ class GuildQueue {
         '-ac', '2',
         'pipe:1'
       ], { stdio: ['ignore', 'pipe', 'ignore'] });
+
+      ffmpeg.on('error', (err) => {
+        logger.error('[MUSIC] FFmpeg process error:', err.message);
+        this.playNext();
+      });
 
       this.resource = createAudioResource(ffmpeg.stdout, {
         inputType: StreamType.Raw,

@@ -157,7 +157,9 @@ class TitanBot extends Client {
     });
 
     app.use(express.json());
-    app.use('/api', createApiRouter(this));
+    const apiRouter = createApiRouter(this);
+    app.use('/api', apiRouter);
+    app.use('/api/v1', apiRouter);
 
     app.get('/health', (req, res) => {
       const dbStatus = this.db?.getStatus?.() || { isDegraded: 'unknown' };

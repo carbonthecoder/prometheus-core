@@ -52,7 +52,7 @@ export default function DashboardLayout({
   }, [pathname]);
 
   React.useEffect(() => {
-    if (status === "unauthenticated") {
+    if (status === "unauthenticated" && (pathname.startsWith("/dashboard/guilds") || pathname.startsWith("/dashboard/guild/"))) {
       signIn("discord");
     }
     
@@ -68,16 +68,46 @@ export default function DashboardLayout({
     fetchNotification();
   }, [status]);
 
-  if (status === "loading" || status === "unauthenticated") {
+  if (status === "loading") {
     return (
       <div className="min-h-screen bg-[#000000] flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-            <span className="font-black text-white italic text-xl">{process.env.NEXT_PUBLIC_BRAND_NAME_WORD || "ZX"}</span>
+          <div className="h-12 w-12 rounded-xl bg-neutral-900 border border-white/10 flex items-center justify-center">
+            <span className="font-bold text-white tracking-wider text-sm">PROMETHEUS</span>
           </div>
-          <p className="text-neutral-400 font-bold tracking-widest uppercase text-xs">
-            Authenticating...
+          <p className="text-neutral-400 font-medium text-xs">
+            Loading...
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated" && (pathname.startsWith("/dashboard/guilds") || pathname.startsWith("/dashboard/guild/"))) {
+    return (
+      <div className="min-h-screen bg-[#000000] flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-[#0a0a0a] border border-white/10 rounded-xl p-8 space-y-6">
+          <div className="h-12 w-12 rounded-xl bg-neutral-900 border border-white/10 flex items-center justify-center mx-auto text-white">
+            <Shield className="h-6 w-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-tight">Discord Authentication Required</h2>
+            <p className="text-sm text-neutral-400 mt-2">
+              Sign in with your Discord account to view and configure server security, moderation, and modules.
+            </p>
+          </div>
+          <button
+            onClick={() => signIn("discord")}
+            className="w-full py-2.5 px-4 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-colors flex items-center justify-center gap-2"
+          >
+            Sign In with Discord
+          </button>
+          <Link
+            href="/dashboard"
+            className="block text-xs text-neutral-500 hover:text-white transition-colors"
+          >
+            ← Return to System Overview
+          </Link>
         </div>
       </div>
     );
