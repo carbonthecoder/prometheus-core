@@ -82,25 +82,26 @@ export const botConfig = {
   },
 
   // =========================
-  // EMBED COLORS & BRANDING
+  // EMBED COLORS & BRANDING (Obsidian Orbit / Digital Noir)
   // =========================
   // IMPORTANT: This is the SINGLE SOURCE OF TRUTH for all bot colors
   embeds: {
     colors: {
       // Main brand colors.
-      primary: "#9B59B6", // Premium Neon Purple
-      secondary: "#2B2D31", // Sleek Deep Dark 
+      primary: "#0e0d0d", // Obsidian Noir
+      secondary: "#131314", // Deep Slate Carbon
+      cozy: "#0e0d0d",
 
       // Standard status colors for success/error/warning/info messages.
-      success: "#57F287", 
-      error: "#ED4245", 
-      warning: "#FEE75C", 
-      info: "#3498DB", 
+      success: "#0e0d0d", 
+      error: "#0e0d0d", 
+      warning: "#0e0d0d", 
+      info: "#0e0d0d", 
 
       // Neutral utility colors.
-      light: "#FFFFFF",
-      dark: "#202225",
-      gray: "#99AAB5",
+      light: "#e5e2e3",
+      dark: "#0e0d0d",
+      gray: "#849495",
 
       // Discord-style palette shortcuts.
       blurple: "#5865F2",

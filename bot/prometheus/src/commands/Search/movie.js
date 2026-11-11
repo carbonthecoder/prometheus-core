@@ -8,7 +8,6 @@ import { getGuildConfig } from '../../services/guildConfig.js';
 import { getColor } from '../../config/bot.js';
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY || '4e44d9029b1270a757cddc766a1bcb63';
-    "4e44d9029b1270a757cddc766a1bcb63";
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
 const MAX_RESULTS = 5;
 

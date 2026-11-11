@@ -1,12 +1,13 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { createEmbed } from '../../utils/embeds.js';
+import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { cozyEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 export default {
-    data: new SlashCommandBuilder()
+  data: new SlashCommandBuilder()
     .setName("userinfo")
-    .setDescription("Get detailed information about a user")
+    .setDescription("Inspect user profile and security details with cozy aesthetic UI")
     .addUserOption((option) =>
       option
         .setName("target")
@@ -17,75 +18,69 @@ export default {
     try {
       const deferSuccess = await InteractionHelper.safeDefer(interaction);
       if (!deferSuccess) {
-        logger.warn(`UserInfo interaction defer failed`, {
-          userId: interaction.user.id,
-          guildId: interaction.guildId,
-          commandName: 'userinfo'
-        });
         return;
       }
 
       const user = interaction.options.getUser("target") || interaction.user;
-      const member = interaction.guild.members.cache.get(user.id);
+      const fetchedUser = await interaction.client.users.fetch(user.id, { force: true }).catch(() => user);
+      const member = interaction.guild?.members.cache.get(user.id);
 
       const createdTimestamp = Math.floor(user.createdAt.getTime() / 1000);
       const joinedTimestamp = member?.joinedAt ? Math.floor(member.joinedAt.getTime() / 1000) : null;
+      const avatarUrl = fetchedUser.displayAvatarURL({ dynamic: true, size: 512 });
+      const bannerUrl = fetchedUser.bannerURL({ dynamic: true, size: 1024 }) || avatarUrl;
 
-      const embed = createEmbed({ title: `👤 User Info: ${user.username}` })
-        .setThumbnail(user.displayAvatarURL({ size: 256 }))
-        .addFields(
-          { name: "ID", value: user.id, inline: true },
-          { name: "Bot", value: user.bot ? "Yes" : "No", inline: true },
-          {
-            name: "Roles",
-            value:
-              member && member.roles.cache.size > 1
-                ? member.roles.cache
-                    .map((r) => r.name)
-                    .slice(0, 5)
-                    .join(", ")
-                : "None",
-            inline: true,
-          },
-          {
-            name: "Account Created",
-            value: `<t:${createdTimestamp}:R>`,
-            inline: false,
-          },
-          {
-            name: "Joined Server",
-            value: joinedTimestamp ? `<t:${joinedTimestamp}:R>` : "Not in server",
-            inline: false,
-          },
-          {
-            name: "Highest Role",
-            value: member?.roles?.highest?.name || "None",
-            inline: true,
-          },
-        );
+      const permissions = member 
+        ? (member.permissions.has('Administrator') ? 'Administrator' : member.permissions.has('ManageGuild') ? 'Manager' : 'Member')
+        : 'External User';
 
-      await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
-      logger.info(`UserInfo command executed`, {
+      const lines = [
+        `**Permissions** ${permissions}`,
+        `**Nickname** ${member?.nickname || 'None'}`,
+        `**Joined** ${joinedTimestamp ? `<t:${joinedTimestamp}:D> · <t:${joinedTimestamp}:R>` : 'Not in server'}`
+      ];
+
+      const footerText = `Created <t:${createdTimestamp}:D> · Accent #0e0d0d`;
+
+      const embed = cozyEmbed({
+        symbol: '◇',
+        title: `@${user.username}`,
+        subtitle: `ID: ${user.id} · Profile`,
+        lines,
+        thumbnail: avatarUrl,
+        footer: footerText,
+        color: '#0e0d0d'
+      });
+
+      const buttonsRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setLabel('Profile ↗')
+          .setStyle(ButtonStyle.Link)
+          .setURL(`https://discord.com/users/${user.id}`),
+        new ButtonBuilder()
+          .setLabel('Avatar ↗')
+          .setStyle(ButtonStyle.Link)
+          .setURL(avatarUrl),
+        new ButtonBuilder()
+          .setLabel('Banner ↗')
+          .setStyle(ButtonStyle.Link)
+          .setURL(bannerUrl)
+      );
+
+      await InteractionHelper.safeEditReply(interaction, {
+        embeds: [embed],
+        components: [buttonsRow]
+      });
+
+      logger.info('UserInfo cozy response rendered', {
         userId: interaction.user.id,
-        targetUserId: user.id,
-        guildId: interaction.guildId
+        targetUserId: user.id
       });
     } catch (error) {
-      logger.error(`UserInfo command execution failed`, {
-        error: error.message,
-        stack: error.stack,
-        userId: interaction.user.id,
-        guildId: interaction.guildId,
-        commandName: 'userinfo'
-      });
+      logger.error('UserInfo execution error:', error);
       await handleInteractionError(interaction, error, {
-        commandName: 'userinfo',
-        source: 'userinfo_command'
+        commandName: 'userinfo'
       });
     }
   },
 };
-
-
-
-

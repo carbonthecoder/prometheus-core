@@ -18,8 +18,12 @@ export default {
         try {
             const sub = interaction.options.getString('subreddit').replace('r/', '');
             
-            // Reddit JSON API is free and public
-            const response = await axios.get(`https://www.reddit.com/r/${sub}/top.json?limit=1&t=day`);
+            // Reddit JSON API requires a distinct custom User-Agent to avoid HTTP 429
+            const response = await axios.get(`https://www.reddit.com/r/${sub}/top.json?limit=1&t=day`, {
+                headers: {
+                    'User-Agent': 'PrometheusBot/2.0 (Discord Bot; +https://github.com/carbonthecoder/prometheus-core)'
+                }
+            });
             
             if (!response.data || !response.data.data.children.length) {
                 return InteractionHelper.safeEditReply(interaction, {

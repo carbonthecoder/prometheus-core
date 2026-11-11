@@ -112,47 +112,98 @@ export function createEmbed({
   return embed;
 }
 
+/**
+ * Builds an ultra-clean, minimalist "cozy noir" Discord embed.
+ * Follows the Obsidian Orbit aesthetic: #0e0d0d, thin quotes '│', monospace metadata.
+ */
+export function cozyEmbed({
+  symbol = '◇',
+  title = '',
+  subtitle = null,
+  lines = [],
+  thumbnail = null,
+  footer = 'Accent #0e0d0d',
+  color = '#0e0d0d'
+} = {}) {
+  const embed = new EmbedBuilder().setColor(color);
+  
+  if (title) {
+    embed.setTitle(`${symbol}(${title})`);
+  }
+
+  const descParts = [];
+  if (subtitle) {
+    descParts.push(`\`│\` **${subtitle}**\n`);
+  }
+
+  if (Array.isArray(lines) && lines.length > 0) {
+    lines.forEach(line => {
+      if (typeof line === 'string' && line.trim()) {
+        descParts.push(`\`│\` ${line}`);
+      }
+    });
+  }
+
+  if (descParts.length > 0) {
+    embed.setDescription(descParts.join('\n'));
+  }
+
+  if (thumbnail) {
+    embed.setThumbnail(thumbnail);
+  }
+
+  if (footer) {
+    embed.setFooter({ text: footer });
+  }
+
+  return embed;
+}
+
 export function errorEmbed(message, error = null, options = {}) {
   const { showDetails = process.env.NODE_ENV !== 'production' } = options;
-  let description = message;
+  const lines = [`${message}`];
 
   if (error && showDetails) {
     const detailText = typeof error === 'string' ? error : (error.message || String(error));
-    description = `${message}\n${formatCodeBlock(detailText)}`;
+    lines.push(formatCodeBlock(detailText));
   }
 
-  return createEmbed({
-    title: '❌ Error',
-    description,
-    color: 'error',
-    timestamp: true
+  return cozyEmbed({
+    symbol: '◇',
+    title: 'Notice',
+    lines,
+    footer: 'System Alert · Accent #0e0d0d',
+    color: '#0e0d0d'
   });
 }
 
-export function successEmbed(message, title = '✅ Success') {
-  return createEmbed({
+export function successEmbed(message, title = 'Success') {
+  return cozyEmbed({
+    symbol: '◇',
     title,
-    description: message,
-    color: 'success',
-    timestamp: true
+    lines: [message],
+    footer: 'Prometheus Core · Accent #0e0d0d',
+    color: '#0e0d0d'
   });
 }
 
-export function infoEmbed(message, title = 'ℹ️ Information') {
-  return createEmbed({
+export function infoEmbed(message, title = 'Information') {
+  return cozyEmbed({
+    symbol: '◇',
     title,
-    description: message,
-    color: 'info',
-    timestamp: true
+    lines: [message],
+    footer: 'Prometheus Core · Accent #0e0d0d',
+    color: '#0e0d0d'
   });
 }
 
-export function warningEmbed(message, title = '⚠️ Warning') {
-  return createEmbed({
+export function warningEmbed(message, title = 'Warning') {
+  return cozyEmbed({
+    symbol: '◇',
     title,
-    description: message,
-    color: 'warning',
-    timestamp: true
+    lines: [message],
+    footer: 'Security Warning · Accent #0e0d0d',
+    color: '#0e0d0d'
   });
 }
 

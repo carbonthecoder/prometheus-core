@@ -2,6 +2,7 @@ import { Events } from "discord.js";
 import { logger, startupLog } from "../utils/logger.js";
 import config from "../config/application.js";
 import { reconcileReactionRoleMessages } from "../services/reactionRoleService.js";
+import { InviteService } from "../services/inviteService.js";
 
 export default {
   name: Events.ClientReady,
@@ -14,6 +15,10 @@ export default {
       startupLog(`Ready! Logged in as ${client.user.tag}`);
       startupLog(`Serving ${client.guilds.cache.size} guild(s)`);
       startupLog(`Loaded ${client.commands.size} commands`);
+
+      for (const guild of client.guilds.cache.values()) {
+        InviteService.initGuildInvites(guild).catch(() => {});
+      }
 
       const reconciliationSummary = await reconcileReactionRoleMessages(client);
       startupLog(

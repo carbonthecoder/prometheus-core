@@ -10,6 +10,7 @@ export default {
         .setDescription('Generates your custom Dynamic ID Passport.'),
         
     async execute(interaction) {
+        await interaction.deferReply();
 
         try {
             const user = interaction.user;

@@ -14,6 +14,8 @@ import { EmbedBuilder } from 'discord.js';
 import axios from 'axios';
 import { broadcastWormhole } from '../commands/Tools/wormhole.js';
 
+import { ModmailService } from '../services/modmailService.js';
+
 const activeEvents = new Map(); // Tracks if an event is currently running in a channel
 
 const MESSAGE_XP_RATE_LIMIT_ATTEMPTS = 12;
@@ -26,28 +28,17 @@ export default {
       
       // --- MODMAIL SUPPORT SYSTEM (DMs) ---
       if (!message.guild) {
-          if (message.author.bot) return;
-          
-          // Forward the DM to a channel named 'modmail' in any mutual guild
-          client.guilds.cache.forEach(async (guild) => {
-              const modmailChannel = guild.channels.cache.find(c => c.name === 'modmail');
-              if (modmailChannel) {
-                  const embed = new EmbedBuilder()
-                      .setAuthor({ name: `${message.author.tag} (ID: ${message.author.id})`, iconURL: message.author.displayAvatarURL() })
-                      .setDescription(message.content || '*(No text, might be an attachment)*')
-                      .setColor('#E74C3C')
-                      .setFooter({ text: `Use /reply ${message.author.id} to respond` });
-                      
-                  await modmailChannel.send({ embeds: [embed] }).catch(() => {});
-              }
-          });
-          
-          await message.author.send("✅ Your message has been sent to the moderation team.").catch(() => {});
-          return;
+        await ModmailService.handleUserDm(message, client);
+        return;
       }
-      // ------------------------------------
 
       if (message.author.bot) return;
+
+      // Handle staff reply in modmail thread
+      if (message.channel.isThread?.()) {
+        await ModmailService.handleStaffReply(message, client);
+      }
+      // ------------------------------------
 
       // --- WORMHOLE BROADCASTING ---
       if (global.wormholeChannels && global.wormholeChannels.has(message.channel.id)) {

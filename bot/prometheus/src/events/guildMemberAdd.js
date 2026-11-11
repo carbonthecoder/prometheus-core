@@ -1,5 +1,7 @@
-import { Events, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+import { Events, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { getColor } from '../config/bot.js';
+import { cozyEmbed } from '../utils/embeds.js';
+import { InviteService } from '../services/inviteService.js';
 import { getGuildConfig } from '../services/guildConfig.js';
 import { getWelcomeConfig } from '../utils/database.js';
 import { formatWelcomeMessage } from '../utils/welcome.js';
@@ -75,50 +77,53 @@ export default {
                     return;
                 }
 
-                const formatData = { user, guild, member };
-                const welcomeMessage = formatWelcomeMessage(
-                    welcomeConfig.welcomeMessage || welcomeConfig.welcomeEmbed?.description || 'Welcome {user} to {server}!',
-                    formatData
-                );
+                const inviterData = await InviteService.findInviter(member);
+                const inviterText = inviterData?.inviter ? `@${inviterData.inviter.username} (code: ${inviterData.code})` : 'Vanity URL or Direct';
+                const createdTimestamp = Math.floor(user.createdAt.getTime() / 1000);
+                const nowTimestamp = Math.floor(Date.now() / 1000);
 
                 const messageContent = welcomeConfig.welcomePing ? user.toString() : null;
-
-                const embedTitle = formatWelcomeMessage(
-                    welcomeConfig.welcomeEmbed?.title || '🎉 Welcome!',
-                    formatData
-                );
-                const embedFooter = welcomeConfig.welcomeEmbed?.footer
-                    ? formatWelcomeMessage(welcomeConfig.welcomeEmbed.footer, formatData)
-                    : `Welcome to ${guild.name}!`;
-
                 const canEmbed = permissions.has(PermissionFlagsBits.EmbedLinks);
 
                 if (!canEmbed) {
                     await channel.send({
-                        content: messageContent || welcomeMessage
+                        content: messageContent || `Welcome ${user} to ${guild.name}!`
                     });
                 } else {
-                    const embed = new EmbedBuilder()
-                        .setColor(welcomeConfig.welcomeEmbed?.color || getColor('success'))
-                        .setTitle(embedTitle)
-                        .setDescription(welcomeMessage)
-                        .setThumbnail(user.displayAvatarURL())
-                        .addFields(
-                            { name: 'User', value: `${user.tag} (${user.id})`, inline: true },
-                            { name: 'Member Count', value: guild.memberCount.toString(), inline: true }
-                        )
-                        .setTimestamp()
-                        .setFooter({ text: embedFooter });
+                    const embed = cozyEmbed({
+                        symbol: '◇',
+                        title: `@${user.username}`,
+                        subtitle: `ID: ${user.id} · Member #${guild.memberCount}`,
+                        lines: [
+                            `**Member** <@${user.id}> (\`${user.id}\`)`,
+                            `**Invited By** ${inviterText}`,
+                            `**Joined** <t:${nowTimestamp}:R>`,
+                            `**Created** <t:${createdTimestamp}:R>`
+                        ],
+                        thumbnail: user.displayAvatarURL({ dynamic: true, size: 256 }),
+                        footer: `Welcome to ${guild.name} · Accent #0e0d0d`,
+                        color: '#0e0d0d'
+                    });
                     
                     if (welcomeConfig.welcomeImage) {
                         embed.setImage(welcomeConfig.welcomeImage);
-                    } else if (welcomeConfig.welcomeEmbed?.image?.url) {
-                        embed.setImage(welcomeConfig.welcomeEmbed.image.url);
                     }
+
+                    const row = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder()
+                            .setLabel('Profile')
+                            .setStyle(ButtonStyle.Link)
+                            .setURL(`https://discord.com/users/${user.id}`),
+                        new ButtonBuilder()
+                            .setLabel('Avatar')
+                            .setStyle(ButtonStyle.Link)
+                            .setURL(user.displayAvatarURL({ dynamic: true, size: 1024 }))
+                    );
                     
                     await channel.send({ 
                         content: messageContent,
-                        embeds: [embed] 
+                        embeds: [embed],
+                        components: [row]
                     });
                 }
             }
