@@ -1,137 +1,112 @@
 import React from "react";
+import Link from "next/link";
 import { 
-  Plus, 
-  Settings2, 
-  Terminal, 
-  Database,
-  Search,
+  ShieldCheck, 
+  Ticket, 
+  BarChart4, 
+  FileText, 
+  Sword,
+  Bot,
+  Bell,
+  Mic,
+  Star,
   Zap,
-  ShieldCheck,
-  Ticket,
-  BarChart4,
-  FileText,
-  Activity
+  Settings,
+  ChevronRight,
+  ExternalLink
 } from "lucide-react";
+import { CommandsDirectory } from "@/components/commands-directory";
 
 export default async function GuildOverviewPage({ params }: { params: Promise<{ guildId: string }> }) {
   const { guildId } = await params;
-  const modules = [
-    { title: "Auto Moderation", desc: "Anti-spam, bad words, and links protection.", icon: ShieldCheck, status: "Active" },
-    { title: "Ticket System", desc: "Helpdesk for user support and inquiries.", icon: Ticket, status: "Configured" },
-    { title: "Leveling", desc: "Gamify your community with XP and ranks.", icon: BarChart4, status: "Active" },
-    { title: "Event Logging", desc: "Detailed audit logs for every server event.", icon: FileText, status: "Active" },
+
+  const quickModules = [
+    { title: "Anti-Nuke Defense", desc: "Role, channel, and webhook deletion protection", icon: Sword, href: `/dashboard/guild/${guildId}/antinuke`, badge: "Strict" },
+    { title: "Auto Moderation", desc: "Anti-spam, bad words, and invite links filtering", icon: ShieldCheck, href: `/dashboard/guild/${guildId}/automod`, badge: "Active" },
+    { title: "Verification Gate", desc: "Interactive button verification for new members", icon: Bot, href: `/dashboard/guild/${guildId}/verification`, badge: "Ready" },
+    { title: "Tickets & Support", desc: "Private channel ticketing system with transcripts", icon: Ticket, href: `/dashboard/guild/${guildId}/tickets`, badge: "Ready" },
+    { title: "Leveling & XP", desc: "Chat and voice XP tracking with automatic roles", icon: BarChart4, href: `/dashboard/guild/${guildId}/leveling`, badge: "Active" },
+    { title: "Welcome Cards", desc: "Automated custom canvas greetings and leave alerts", icon: Bell, href: `/dashboard/guild/${guildId}/welcome`, badge: "Ready" },
+    { title: "Join to Create", desc: "Dynamic temporary voice channels for community", icon: Mic, href: `/dashboard/guild/${guildId}/j2c`, badge: "Ready" },
+    { title: "Reaction Roles", desc: "Self-assignable roles via buttons and select menus", icon: Star, href: `/dashboard/guild/${guildId}/reactionroles`, badge: "Ready" },
+    { title: "Audit Logging", desc: "Granular server event logging and moderation history", icon: FileText, href: `/dashboard/guild/${guildId}/logging`, badge: "Logging" },
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* Quick Config Column */}
-      <div className="space-y-8">
-        <section>
-          <div className="flex items-center gap-2 mb-6">
-            <h2 className="text-xl font-bold text-white tracking-tight">Active Modules</h2>
-            <div className="h-[2px] flex-1 bg-neutral-800" />
-            <Plus className="h-4 w-4 text-slate-600 cursor-pointer hover:text-white transition-colors" />
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {modules.map((mod) => (
-              <div key={mod.title} className="bg-[#0a0a0a] border border-white/10 p-5 rounded-lg group hover:border-slate-600 transition-all shadow-sm">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="h-10 w-10 bg-neutral-800 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <mod.icon className="h-5 w-5" />
-                  </div>
-                  <span className="text-[10px] font-black uppercase text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                    {mod.status}
+    <div className="space-y-10 max-w-6xl mx-auto">
+      {/* Top Banner / Intro */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-white font-sans">
+            Server Modules & Commands
+          </h1>
+          <p className="text-xs text-neutral-400 mt-1">
+            Configure security, moderation, community automation, and browse all 111 slash commands for this guild.
+          </p>
+        </div>
+
+        <Link
+          href={`/dashboard/guild/${guildId}/settings`}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-white/10 hover:border-white/20 text-neutral-300 hover:text-white text-xs font-medium transition-colors"
+        >
+          <Settings className="h-3.5 w-3.5" />
+          Guild Settings
+        </Link>
+      </div>
+
+      {/* Module Cards Grid */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-400">
+            Core Modules
+          </h2>
+          <span className="text-[11px] font-mono text-neutral-500">18 total modules</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {quickModules.map((mod) => (
+            <Link
+              key={mod.title}
+              href={mod.href}
+              className="p-5 rounded-xl bg-[#0a0a0a] border border-white/10 hover:border-white/20 transition-all group flex flex-col justify-between h-36"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <mod.icon className="h-4 w-4 text-neutral-400 group-hover:text-white transition-colors" />
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-900 border border-white/10 text-neutral-400">
+                    {mod.badge}
                   </span>
                 </div>
-                <h3 className="font-bold text-white mb-1">{mod.title}</h3>
-                <p className="text-xs text-neutral-500 leading-relaxed">{mod.desc}</p>
+                <h3 className="text-sm font-medium text-white group-hover:underline">
+                  {mod.title}
+                </h3>
+                <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
+                  {mod.desc}
+                </p>
               </div>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <div className="flex items-center gap-2 mb-6">
-            <h2 className="text-xl font-bold text-white tracking-tight">System Console</h2>
-            <div className="h-[2px] flex-1 bg-neutral-800" />
-          </div>
-          <div className="bg-neutral-900 border border-white/10 rounded-lg p-4 font-mono text-xs overflow-hidden shadow-2xl">
-            <div className="flex items-center gap-2 mb-3 border-b border-white/10 pb-2">
-              <Terminal className="h-4 w-4 text-primary" />
-              <span className="text-neutral-400">guild_event_stream_{guildId}</span>
-            </div>
-            <div className="space-y-1.5 opacity-80">
-              <p className="text-neutral-500">[{new Date().toLocaleTimeString()}] <span className="text-emerald-500">INIT</span> Dashboard connected to WebSocket pool...</p>
-              <p className="text-neutral-500">[{new Date().toLocaleTimeString()}] <span className="text-primary">INFO</span> Fetching guild_config from primary database...</p>
-              <p className="text-neutral-500">[{new Date().toLocaleTimeString()}] <span className="text-emerald-500">DONE</span> Cache synchronized successfully.</p>
-              <p className="text-neutral-400 animate-pulse">_</p>
-            </div>
-          </div>
-        </section>
+            </Link>
+          ))}
+        </div>
       </div>
 
-      {/* Integration Status Column */}
-      <div className="space-y-8">
-        <section className="bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 rounded-xl p-8 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform">
-            <Database className="h-48 w-48 text-white" />
+      {/* All 111 Commands Directory */}
+      <div className="space-y-4 pt-4 border-t border-white/10">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-400">
+              Command Catalog
+            </h2>
+            <p className="text-xs text-neutral-500 mt-0.5">
+              Every slash command registered and available on this server.
+            </p>
           </div>
-          <h2 className="text-2xl font-black text-white mb-2 italic tracking-tighter">Database Status</h2>
-          <p className="text-neutral-400 text-sm mb-8 max-w-[280px]">All guild data is encrypted and replicated across our high-performance edge network.</p>
-          
-          <div className="space-y-4 relative z-10">
-            {[
-              { label: 'Uptime', value: '99.98%', icon: Zap },
-              { label: 'Sync Delay', value: '12ms', icon: Activity },
-              { label: 'Region', value: 'Global Edges', icon: GlobalizationIcon }
-            ].map((stat) => (stat.icon && 
-              <div key={stat.label} className="flex items-center justify-between p-4 bg-black/20 backdrop-blur-md rounded-lg border border-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 bg-black/40 rounded-lg flex items-center justify-center text-primary">
-                    <stat.icon className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium text-neutral-300">{stat.label}</span>
-                </div>
-                <span className="text-sm font-bold text-white tracking-widest">{stat.value}</span>
-              </div>
-            ))}
-          </div>
-        </section>
+          <span className="text-xs font-mono text-neutral-400 bg-neutral-900 border border-white/10 px-2.5 py-1 rounded-full">
+            111 commands
+          </span>
+        </div>
 
-        <section className="bg-[#0a0a0a] border border-white/10 rounded-xl p-8">
-           <h2 className="text-xl font-bold text-white mb-6">Security Context</h2>
-           <div className="flex items-center gap-6">
-              <div className="h-20 w-20 rounded-full border-4 border-emerald-500/20 flex items-center justify-center relative shadow-[0_0_20px_rgba(16,185,129,0.1)]">
-                <div className="h-16 w-16 rounded-full border-4 border-emerald-500 flex items-center justify-center text-emerald-500 font-black text-xl italic">
-                  100%
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Trust Factor</h3>
-                <p className="text-neutral-400 text-sm">Bot is fully authenticated with administrator privileges.</p>
-              </div>
-           </div>
-        </section>
+        <CommandsDirectory />
       </div>
     </div>
-  );
-}
-
-function GlobalizationIcon({ className }: { className?: string }) {
-  return (
-    <svg 
-      className={className} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="2" y1="12" x2="22" y2="12" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-    </svg>
   );
 }
