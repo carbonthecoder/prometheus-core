@@ -4,6 +4,8 @@
   "description": "Production-ready Discord Bot with 96 Slash Commands, 24/7 HD Music, AutoMod, Tickets, Economy, Leveling, and Next.js Web Dashboard",
   "main": "bot/prometheus/src/app.js",
   "scripts": {
+    "start": "npm --prefix \"bot/prometheus\" start",
+    "heroku-postbuild": "npm --prefix \"bot/prometheus\" install --omit=dev",
     "install:all": "npm --prefix \"bot/prometheus\" install && npm --prefix \"dashboard\" install",
     "bot": "npm --prefix \"bot/prometheus\" start",
     "dashboard": "npm --prefix \"dashboard\" start -- -p 3001",
