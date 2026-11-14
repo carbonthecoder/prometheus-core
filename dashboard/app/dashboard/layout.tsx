@@ -75,31 +75,28 @@ export default function DashboardLayout({
     );
   }
 
-  if (status === "unauthenticated" && (pathname.startsWith("/dashboard/guilds") || pathname.startsWith("/dashboard/guild/"))) {
+  if (status === "unauthenticated") {
     return (
-      <div className="min-h-screen bg-[#000000] flex flex-col items-center justify-center p-6 text-center">
-        <div className="max-w-md w-full bg-[#0a0a0a] border border-white/10 rounded-xl p-8 space-y-6">
-          <div className="h-10 w-10 rounded-lg bg-neutral-900 border border-white/10 flex items-center justify-center mx-auto text-white">
-            <Shield className="h-5 w-5" />
+      <div className="min-h-screen bg-[#000000] flex flex-col items-center justify-center p-6 text-center antialiased">
+        <div className="max-w-sm w-full bg-[#0a0a0a] border border-white/10 rounded-2xl p-8 space-y-6 shadow-2xl">
+          <div className="h-12 w-12 rounded-xl bg-neutral-900 border border-white/10 flex items-center justify-center mx-auto text-white font-mono text-lg">
+            ◇
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-white tracking-tight">Discord Authentication Required</h2>
-            <p className="text-xs text-neutral-400 mt-2 leading-relaxed">
-              Sign in with your Discord account to manage server configurations, moderation, and role automation.
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-semibold text-white tracking-tight">Prometheus Core</h2>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              Sign in with your Discord account to manage your servers, security, and modules.
             </p>
           </div>
           <button
-            onClick={() => signIn("discord")}
-            className="w-full py-2.5 px-4 rounded-lg bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-colors"
+            onClick={() => signIn("discord", { callbackUrl: "/dashboard/guilds" })}
+            className="w-full py-3 px-4 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-sm"
           >
-            Sign In with Discord
+            <span>Sign In with Discord</span>
           </button>
-          <Link
-            href="/dashboard"
-            className="block text-xs text-neutral-500 hover:text-white transition-colors"
-          >
-            ← Back to Overview
-          </Link>
+          <div className="text-[11px] font-mono text-neutral-600 pt-3 border-t border-white/5">
+            Obsidian Noir · Accent #0e0d0d
+          </div>
         </div>
       </div>
     );
@@ -319,40 +316,28 @@ export default function DashboardLayout({
               <span>Self-hosted VPS</span>
             </div>
 
-            {/* Notification bell */}
-            <div className="relative" ref={bellRef}>
-              <button
-                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="p-2 text-neutral-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
-                title="Notifications"
-              >
-                <Bell className="h-4 w-4" />
-                {globalNotification && (
-                  <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-white" />
-                )}
-              </button>
-
-              {isNotificationsOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-[#0a0a0a] border border-white/10 rounded-xl shadow-2xl p-4 z-50 text-xs">
-                  <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
-                    <span className="font-mono text-neutral-400">Notifications</span>
-                    {globalNotification && (
-                      <button
-                        onClick={() => setGlobalNotification(null)}
-                        className="text-[10px] text-neutral-500 hover:text-white"
-                      >
-                        Dismiss
-                      </button>
-                    )}
-                  </div>
-                  {globalNotification ? (
-                    <p className="text-neutral-300 leading-relaxed">{globalNotification}</p>
+            {/* User Discord Profile Badge */}
+            {session?.user && (
+              <div className="flex items-center gap-2.5 pl-2 border-l border-white/10">
+                <div className="h-7 w-7 rounded-full bg-neutral-800 border border-white/10 overflow-hidden flex items-center justify-center flex-shrink-0">
+                  {session.user.image ? (
+                    <img src={session.user.image} alt={session.user.name || "User"} className="h-full w-full object-cover" />
                   ) : (
-                    <p className="text-neutral-500 py-4 text-center">No active notifications</p>
+                    <User className="h-3.5 w-3.5 text-neutral-400" />
                   )}
                 </div>
-              )}
-            </div>
+                <span className="hidden md:inline text-xs font-medium text-white truncate max-w-[120px]">
+                  {session.user.name || "Operator"}
+                </span>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="p-1.5 text-neutral-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                  title="Sign Out"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         </header>
 
