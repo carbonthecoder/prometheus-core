@@ -47,10 +47,6 @@ export default function DashboardLayout({
   }, [pathname]);
 
   useEffect(() => {
-    if (status === "unauthenticated" && (pathname.startsWith("/dashboard/guilds") || pathname.startsWith("/dashboard/guild/"))) {
-      signIn("discord");
-    }
-    
     const fetchNotification = async () => {
       try {
         const config = await api.getAdminConfig();
@@ -60,7 +56,7 @@ export default function DashboardLayout({
       }
     };
     fetchNotification();
-  }, [status, pathname]);
+  }, [pathname]);
 
   if (status === "loading") {
     return (

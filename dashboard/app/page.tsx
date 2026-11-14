@@ -66,7 +66,7 @@ export default function App() {
 
         <div className="flex items-center gap-3">
           <a
-            href="/dashboard"
+            href="/dashboard/guilds"
             className="px-3.5 py-1.5 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm"
           >
             <span>Open Dashboard →</span>
@@ -102,7 +102,7 @@ export default function App() {
         {/* Actions */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
-            href="/dashboard"
+            href="/dashboard/guilds"
             className="px-5 py-2.5 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-all shadow-sm flex items-center gap-2"
           >
             <span>Open Dashboard →</span>

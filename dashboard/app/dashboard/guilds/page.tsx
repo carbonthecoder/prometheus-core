@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Users, ChevronRight, Plus, ExternalLink, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Users, ChevronRight, Plus, ExternalLink, Bot, ShieldCheck } from "lucide-react";
 import { api } from "@/lib/api";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -27,7 +27,6 @@ export default async function GuildsPage() {
   try {
     botGuilds = await api.listGuilds();
   } catch (err) {
-    // Fallback bot guilds if API is unreachable
     botGuilds = [
       { id: "1508741457769664573", name: "Spooky nights", icon: null, member_count: 12 }
     ];
@@ -68,7 +67,6 @@ export default async function GuildsPage() {
     botGuildMap.set(String(g.id), g);
   });
 
-  // Always make sure Spooky nights is present
   if (!botGuildMap.has("1508741457769664573")) {
     botGuildMap.set("1508741457769664573", {
       id: "1508741457769664573",
@@ -94,7 +92,6 @@ export default async function GuildsPage() {
     });
   }
 
-  // If user guilds are empty or user hasn't authed, display bot guilds directly
   botGuildMap.forEach((g, id) => {
     if (!displayedGuilds.some(dg => dg.id === id)) {
       displayedGuilds.push({
@@ -108,23 +105,29 @@ export default async function GuildsPage() {
     }
   });
 
-  // Sort: servers with bot installed first, then alphabetically
   displayedGuilds.sort((a, b) => {
     if (a.botPresent && !b.botPresent) return -1;
     if (!a.botPresent && b.botPresent) return 1;
     return a.name.localeCompare(b.name);
   });
 
+  const activeCount = displayedGuilds.filter(g => g.botPresent).length;
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white font-sans">
-            Servers
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight text-white font-sans">
+              Your Servers
+            </h1>
+            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-neutral-900 border border-white/10 text-neutral-400">
+              {activeCount} active
+            </span>
+          </div>
           <p className="text-xs text-neutral-400 mt-1">
-            Select a server to configure or invite Prometheus Core to a new server.
+            Select an active server to open its dashboard or invite Prometheus Core to any server you manage.
           </p>
         </div>
 
@@ -135,9 +138,33 @@ export default async function GuildsPage() {
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-colors"
         >
           <Plus className="h-3.5 w-3.5" />
-          Add to New Server
+          Invite Bot to Server
         </a>
       </div>
+
+      {/* Zero Active Servers Callout (if activeCount is 0) */}
+      {activeCount === 0 && (
+        <div className="p-8 rounded-2xl bg-[#0a0a0a] border border-white/10 text-center space-y-4">
+          <div className="h-12 w-12 rounded-xl bg-neutral-900 border border-white/10 flex items-center justify-center mx-auto text-white">
+            <Bot className="h-6 w-6" />
+          </div>
+          <div className="max-w-md mx-auto">
+            <h3 className="text-base font-semibold text-white">No Active Servers Found</h3>
+            <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
+              Prometheus is not currently in any of your servers. Click below to add the bot to one of your servers and start configuring modules.
+            </p>
+          </div>
+          <a
+            href="https://discord.com/oauth2/authorize?client_id=1532437892318892144&permissions=8&scope=bot%20applications.commands"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Invite Prometheus to a Server
+          </a>
+        </div>
+      )}
 
       {/* Servers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -197,7 +224,7 @@ export default async function GuildsPage() {
                 {guild.botPresent ? (
                   <Link
                     href={`/dashboard/guild/${guild.id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white text-white hover:text-black text-xs font-medium transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white text-white hover:text-black text-xs font-medium transition-colors"
                   >
                     <span>Configure</span>
                     <ChevronRight className="h-3.5 w-3.5" />
