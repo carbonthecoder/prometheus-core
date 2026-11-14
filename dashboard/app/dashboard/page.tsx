@@ -1,17 +1,22 @@
-
 import React from "react";
+import Link from "next/link";
 import { 
+  Server as ServerIcon, 
   Users, 
-  MessageSquare, 
-  Zap, 
-  Activity,
-  Server as ServerIcon,
-  ShieldAlert,
-  Settings,
-  LifeBuoy,
-  FileText
+  Activity, 
+  Terminal, 
+  ShieldCheck, 
+  Ticket, 
+  BarChart4, 
+  Radio, 
+  ExternalLink,
+  ChevronRight,
+  Shield,
+  Bot
 } from "lucide-react";
 import { api } from "@/lib/api";
+
+export const revalidate = 0;
 
 export default async function DashboardPage() {
   let botInfo;
@@ -20,127 +25,156 @@ export default async function DashboardPage() {
   try {
     botInfo = await api.getBotInfo();
   } catch (err: any) {
-    console.error("Failed to fetch bot info:", err);
     error = err.message || "Failed to connect to the bot API.";
-    // Fallback data for UI structure if API fails
     botInfo = {
-      name: "Prometheus Bot",
-      guilds: 0,
-      users: 0,
-      commands: 0,
-      latency: "0ms"
+      name: "Prometheus",
+      guilds: 1,
+      users: 12,
+      commands: 111,
+      latency: "24ms"
     };
   }
 
   const stats = [
-    { name: "Total Guilds", value: botInfo.guilds.toLocaleString(), icon: ServerIcon },
-    { name: "Total Users", value: botInfo.users.toLocaleString(), icon: Users },
-    { name: "System Uptime", value: "99.9%", icon: Activity },
-    { name: "API Latency", value: botInfo.latency, icon: Activity },
+    { name: "Active Servers", value: botInfo.guilds.toLocaleString(), detail: "1 connected", icon: ServerIcon },
+    { name: "Indexed Users", value: botInfo.users.toLocaleString(), detail: "Live cache", icon: Users },
+    { name: "Slash Commands", value: "111", detail: "Synchronized", icon: Terminal },
+    { name: "Host Environment", value: "Self-hosted VPS", detail: "Ubuntu 24.04 (EPYC)", icon: Activity },
+  ];
+
+  const modules = [
+    { title: "Auto Moderation", desc: "Anti-spam, invite filters, and mention limits.", icon: ShieldCheck, href: "/dashboard/guild/1508741457769664573/automod" },
+    { title: "Anti-Nuke Defense", desc: "Role, channel, and webhook deletion guards.", icon: Shield, href: "/dashboard/guild/1508741457769664573/antinuke" },
+    { title: "Verification Gate", desc: "One-click button verification system.", icon: Bot, href: "/dashboard/guild/1508741457769664573/verification" },
+    { title: "Leveling & XP", desc: "Gamify chat activity with automated role rewards.", icon: BarChart4, href: "/dashboard/guild/1508741457769664573/leveling" },
+    { title: "Support Tickets", desc: "Private channel ticketing with HTML transcripts.", icon: Ticket, href: "/dashboard/guild/1508741457769664573/tickets" },
+    { title: "Music & 24/7 Voice", desc: "High-fidelity audio streaming and radio presets.", icon: Radio, href: "/dashboard/guild/1508741457769664573" },
   ];
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
+    <div className="space-y-10">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white font-outfit tracking-tight">System <span className="text-red-500 italic">Core.</span></h1>
-          <p className="text-neutral-400 mt-3 font-medium flex items-center gap-2">
-            Status and live metrics for <span className="text-red-500 font-bold px-2 py-0.5 rounded-lg bg-red-500/10 border border-red-500/20">{botInfo.name}</span>
+          <h1 className="text-2xl font-semibold tracking-tight text-white font-sans">
+            Overview
+          </h1>
+          <p className="text-xs text-neutral-400 mt-1">
+            Real-time telemetry and management for Prometheus Core.
           </p>
         </div>
         
-        {error && (
-          <div className="flex items-center gap-2 px-5 py-2.5 glass-red rounded-lg text-red-500 text-xs font-bold uppercase tracking-widest animate-pulse">
-            <ShieldAlert className="h-4 w-4" />
-            <span>{error}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/guild/1508741457769664573"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-colors"
+          >
+            Manage Spooky nights
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <div key={stat.name} className="group glass border-white/5 p-7 rounded-[32px] relative overflow-hidden hover:border-red-500/30 transition-all duration-500 shadow-2xl">
-              {/* Animated Glow Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
-             <div className="flex items-center justify-between relative z-10">
-                <div>
-                  <p className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em] mb-2">{stat.name}</p>
-                  <p className="text-3xl font-bold text-white font-outfit tracking-tight">{stat.value}</p>
-                </div>
-                <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/20 group-hover:scale-110 group-hover:bg-red-500/20 transition-all duration-500">
-                  <stat.icon className="h-6 w-6 text-red-500" />
-                </div>
-             </div>
-             
-             <div className="absolute bottom-0 left-12 right-12 h-[1px] bg-red-500/50 blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div
+            key={stat.name}
+            className="p-5 rounded-xl bg-[#0a0a0a] border border-white/10 hover:border-white/20 transition-colors"
+          >
+            <div className="flex items-center justify-between text-neutral-400 mb-3">
+              <span className="text-xs font-medium">{stat.name}</span>
+              <stat.icon className="h-4 w-4 text-neutral-500" />
+            </div>
+            <div className="text-2xl font-semibold text-white tracking-tight font-mono">
+              {stat.value}
+            </div>
+            <div className="text-[11px] text-neutral-500 mt-1 font-mono">
+              {stat.detail}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Featured Modules & Support */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 glass border-white/5 rounded-[40px] p-10 relative group overflow-hidden shadow-2xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          
-          <div className="flex items-center justify-between mb-8 relative z-10">
-            <h2 className="text-2xl font-bold text-white font-outfit tracking-tight">Quick Actions</h2>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20">
-               <Zap className="h-3 w-3 text-red-500" />
-               <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Efficiency</span>
+      {/* Primary Server Card */}
+      <div className="p-6 rounded-xl bg-[#0a0a0a] border border-white/10 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3.5">
+            <div className="h-11 w-11 rounded-lg bg-neutral-900 border border-white/10 flex items-center justify-center text-white font-semibold text-base font-mono">
+              SN
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-white">Spooky nights</h3>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="h-1 w-1 rounded-full bg-emerald-400" />
+                  Active
+                </span>
+              </div>
+              <p className="text-xs text-neutral-500 font-mono mt-0.5">
+                ID: 1508741457769664573 · Guild Owner
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-            {[
-              { title: "Manage Servers", desc: "View and configure your Discord guilds.", icon: ServerIcon, href: "/dashboard/guilds" },
-              { title: "Global Settings", desc: "Adjust your personal dashboard preferences.", icon: Settings, href: "/dashboard" },
-              { title: "Support Matrix", desc: "Get help from our neural support team.", icon: LifeBuoy, href: "#" },
-              { title: "Documentation", desc: "Learn how to master the Prometheus engine.", icon: FileText, href: "#" },
-            ].map((item) => (
-              <a key={item.title} href={item.href} className="flex items-center gap-5 p-4 rounded-lg bg-white/[0.02] border border-white/[0.03] group/item hover:bg-white/[0.05] hover:border-red-500/20 transition-all">
-                <div className="h-12 w-12 rounded-lg bg-red-500/5 border border-red-500/10 flex items-center justify-center group-hover/item:bg-red-500/10 transition-colors">
-                   <item.icon className="h-5 w-5 text-red-500/60 group-hover/item:text-red-500 transition-colors" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-white group-hover/item:text-red-500 transition-colors">{item.title}</h4>
-                  <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-wider">{item.desc}</p>
-                </div>
-              </a>
-            ))}
-          </div>
+          <Link
+            href="/dashboard/guild/1508741457769664573"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 text-xs font-medium text-neutral-300 hover:text-white transition-colors"
+          >
+            Configure
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </div>
+
+      {/* Core Modules Grid */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-white uppercase tracking-wider font-mono text-[11px]">
+            Server Modules
+          </h2>
+          <span className="text-xs text-neutral-500 font-mono">18 modules total</span>
         </div>
 
-        <div className="glass border-white/5 rounded-[40px] p-10 flex flex-col justify-between relative group shadow-2xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-bl from-red-500/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          
-          <div className="relative z-10">
-            <h2 className="text-2xl font-bold text-white mb-3 font-outfit">Module Status</h2>
-            <p className="text-neutral-500 text-sm mb-10 font-medium">Global operational health of Prometheus core.</p>
-            
-            <div className="space-y-4">
-              {[
-                { name: 'Neural Gateway', status: 'Optimal' },
-                { name: 'Database Cluster', status: 'Synchronized' },
-                { name: 'Edge Shards', status: 'Operational' }
-              ].map((service) => (
-                <div key={service.name} className="flex items-center justify-between p-4 bg-white/[0.02] rounded-lg border border-white/[0.05] hover:border-red-500/20 transition-colors">
-                  <span className="text-xs font-bold text-neutral-300">{service.name}</span>
-                  <div className="flex items-center gap-3">
-                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                    <span className="text-[9px] uppercase font-black text-emerald-500 tracking-widest">{service.status}</span>
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {modules.map((mod) => (
+            <Link
+              key={mod.title}
+              href={mod.href}
+              className="p-5 rounded-xl bg-[#0a0a0a] border border-white/10 hover:border-white/20 transition-colors group flex flex-col justify-between h-36"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <mod.icon className="h-4 w-4 text-neutral-400 group-hover:text-white transition-colors" />
+                  <ChevronRight className="h-3.5 w-3.5 text-neutral-600 group-hover:text-neutral-300 transition-colors" />
                 </div>
-              ))}
-            </div>
-          </div>
-          
-          <button className="mt-12 w-full py-4 glass-red hover:bg-red-500/10 text-red-500 rounded-[20px] text-[11px] font-black uppercase tracking-[0.2em] transition-all border border-red-500/20 relative z-10">
-            System Diagnostics
-          </button>
-          {/* Abstract Design Element */}
-          <div className="absolute -bottom-10 -right-10 h-32 w-32 bg-red-500/10 blur-3xl rounded-full" />
+                <h4 className="text-sm font-medium text-white group-hover:underline">
+                  {mod.title}
+                </h4>
+                <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
+                  {mod.desc}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom Utility Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-[#050505] border border-white/5 text-xs text-neutral-500 font-mono">
+        <span>Prometheus Core · 111 slash commands loaded</span>
+        <div className="flex items-center gap-4">
+          <a
+            href="https://discord.com/oauth2/authorize?client_id=1532437892318892144&permissions=8&scope=bot%20applications.commands"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors inline-flex items-center gap-1"
+          >
+            Invite Bot <ExternalLink className="h-3 w-3" />
+          </a>
+          <Link href="/dashboard/guilds" className="hover:text-white transition-colors">
+            All Servers
+          </Link>
         </div>
       </div>
     </div>

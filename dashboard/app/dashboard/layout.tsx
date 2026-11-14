@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -6,13 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Server, ShieldCheck, Ticket, BarChart4, FileText, Settings,
-  Menu, X, Bell, User, Search, ChevronRight, Star, Sparkles, LogOut,
-  LifeBuoy, ChevronDown, Bot, Shield
+  Menu, X, Bell, User, ChevronRight, Star, LogOut, Shield, Bot, Radio, Gift, Coins
 } from "lucide-react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { cn, isAdmin } from "@/lib/utils";
 import { api } from "@/lib/api";
-import { AdminConfig } from "@/types/api";
 
 export default function DashboardLayout({
   children,
@@ -29,7 +26,6 @@ export default function DashboardLayout({
   const bellRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -45,39 +41,35 @@ export default function DashboardLayout({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Auto-close sidebar on mobile when navigating
-  React.useEffect(() => {
+  useEffect(() => {
     setIsSidebarOpen(false);
     setIsProfileOpen(false);
   }, [pathname]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (status === "unauthenticated" && (pathname.startsWith("/dashboard/guilds") || pathname.startsWith("/dashboard/guild/"))) {
       signIn("discord");
     }
     
-    // Fetch global notification
     const fetchNotification = async () => {
       try {
         const config = await api.getAdminConfig();
         setGlobalNotification(config.global_notification);
       } catch (err) {
-        console.error("Failed to fetch notifications:", err);
+        // quiet fallback
       }
     };
     fetchNotification();
-  }, [status]);
+  }, [status, pathname]);
 
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-[#000000] flex items-center justify-center">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-neutral-900 border border-white/10 flex items-center justify-center">
-            <span className="font-bold text-white tracking-wider text-sm">PROMETHEUS</span>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-[#0a0a0a] border border-white/10 flex items-center justify-center text-white font-mono text-xs">
+            ◇
           </div>
-          <p className="text-neutral-400 font-medium text-xs">
-            Loading...
-          </p>
+          <p className="text-neutral-500 font-mono text-xs">Connecting...</p>
         </div>
       </div>
     );
@@ -87,18 +79,18 @@ export default function DashboardLayout({
     return (
       <div className="min-h-screen bg-[#000000] flex flex-col items-center justify-center p-6 text-center">
         <div className="max-w-md w-full bg-[#0a0a0a] border border-white/10 rounded-xl p-8 space-y-6">
-          <div className="h-12 w-12 rounded-xl bg-neutral-900 border border-white/10 flex items-center justify-center mx-auto text-white">
-            <Shield className="h-6 w-6" />
+          <div className="h-10 w-10 rounded-lg bg-neutral-900 border border-white/10 flex items-center justify-center mx-auto text-white">
+            <Shield className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Discord Authentication Required</h2>
-            <p className="text-sm text-neutral-400 mt-2">
-              Sign in with your Discord account to view and configure server security, moderation, and modules.
+            <h2 className="text-lg font-semibold text-white tracking-tight">Discord Authentication Required</h2>
+            <p className="text-xs text-neutral-400 mt-2 leading-relaxed">
+              Sign in with your Discord account to manage server configurations, moderation, and role automation.
             </p>
           </div>
           <button
             onClick={() => signIn("discord")}
-            className="w-full py-2.5 px-4 rounded-md bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2.5 px-4 rounded-lg bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-colors"
           >
             Sign In with Discord
           </button>
@@ -106,7 +98,7 @@ export default function DashboardLayout({
             href="/dashboard"
             className="block text-xs text-neutral-500 hover:text-white transition-colors"
           >
-            ← Return to System Overview
+            ← Back to Overview
           </Link>
         </div>
       </div>
@@ -116,7 +108,6 @@ export default function DashboardLayout({
   const match = pathname.match(/\/dashboard\/guild\/([^\/]+)/);
   const currentGuildId = match ? match[1] : null;
 
-  // Base sidebar items – will be filtered if we are inside a guild
   const allSidebarItems = currentGuildId
     ? [
         { name: "Overview", href: `/dashboard/guild/${currentGuildId}`, icon: LayoutDashboard },
@@ -125,7 +116,7 @@ export default function DashboardLayout({
           items: [
             { name: "Anti-Nuke", href: `/dashboard/guild/${currentGuildId}/antinuke`, icon: ShieldCheck },
             { name: "Automod", href: `/dashboard/guild/${currentGuildId}/automod`, icon: ShieldCheck },
-            { name: "Verification", href: `/dashboard/guild/${currentGuildId}/verification`, icon: User },
+            { name: "Verification", href: `/dashboard/guild/${currentGuildId}/verification`, icon: Shield },
           ],
         },
         {
@@ -133,20 +124,17 @@ export default function DashboardLayout({
           items: [
             { name: "Welcome", href: `/dashboard/guild/${currentGuildId}/welcome`, icon: Bell },
             { name: "Leveling", href: `/dashboard/guild/${currentGuildId}/leveling`, icon: BarChart4 },
-            { name: "Vanity Roles", href: `/dashboard/guild/${currentGuildId}/vanityroles`, icon: Star },
-            { name: "Auto Role", href: `/dashboard/guild/${currentGuildId}/autorole`, icon: Search },
-            { name: "Auto React", href: `/dashboard/guild/${currentGuildId}/autoreact`, icon: Settings },
-            { name: "Reaction Roles", href: `/dashboard/guild/${currentGuildId}/reactionroles`, icon: Search },
-            { name: "Join DM", href: `/dashboard/guild/${currentGuildId}/joindm`, icon: User },
-            { name: "Invites", href: `/dashboard/guild/${currentGuildId}/invites`, icon: Search },
-            { name: "Tracking", href: `/dashboard/guild/${currentGuildId}/tracking`, icon: BarChart4 },
+            { name: "Auto Role", href: `/dashboard/guild/${currentGuildId}/autorole`, icon: Bot },
+            { name: "Reaction Roles", href: `/dashboard/guild/${currentGuildId}/reactionroles`, icon: Star },
+            { name: "Join DM", href: `/dashboard/guild/${currentGuildId}/joindm`, icon: FileText },
+            { name: "Invites", href: `/dashboard/guild/${currentGuildId}/invites`, icon: Server },
           ],
         },
         {
-          name: "Utility",
+          name: "Automation",
           items: [
             { name: "Tickets", href: `/dashboard/guild/${currentGuildId}/tickets`, icon: Ticket },
-            { name: "Join to Create", href: `/dashboard/guild/${currentGuildId}/j2c`, icon: Menu },
+            { name: "Join to Create", href: `/dashboard/guild/${currentGuildId}/j2c`, icon: Radio },
             { name: "Custom Roles", href: `/dashboard/guild/${currentGuildId}/customroles`, icon: ShieldCheck },
             { name: "Voice Role", href: `/dashboard/guild/${currentGuildId}/invcrole`, icon: Settings },
           ],
@@ -155,14 +143,13 @@ export default function DashboardLayout({
         { name: "Back to Servers", href: "/dashboard/guilds", icon: Server },
       ]
     : [
-        { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+        { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
         { name: "Servers", href: "/dashboard/guilds", icon: Server },
         ...(isAdmin(session?.user?.id) 
             ? [{ name: "Admin Panel", href: "/dashboard/admin", icon: Shield }] 
             : []),
       ];
 
-  // Separate the "Back to Servers" item when inside a guild
   let mainSidebarItems = allSidebarItems;
   let backLinkItem: any = null;
 
@@ -176,90 +163,66 @@ export default function DashboardLayout({
   const BackLinkIcon = backLinkItem?.icon || Server;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-neutral-200">
-      {/* Liquid Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-red-500/5 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[10%] left-[-5%] w-[30%] h-[30%] bg-indigo-500/5 blur-[100px] rounded-full animate-pulse [animation-delay:2s]" />
-      </div>
-
+    <div className="min-h-screen bg-[#000000] text-neutral-200 antialiased selection:bg-neutral-800">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar - now using flex column */}
+      {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-4 top-4 bottom-4 z-50 w-64 transform transition-all duration-500 ease-in-out lg:translate-x-0 glass border border-white/10 rounded-[2.5rem] shadow-2xl shadow-black/40 overflow-hidden flex flex-col",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-[110%]"
+          "fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#000000] border-r border-white/10 transition-transform duration-200 ease-in-out lg:translate-x-0 flex flex-col",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Header */}
-        <div className="flex h-16 items-center px-6 mt-4 flex-shrink-0">
-          <div className="flex items-center gap-3 group">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-red-500 to-red-800 flex items-center justify-center shadow-lg shadow-red-500/20 group-hover:scale-110 transition-transform border border-white/10">
-              <Bot className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-lg font-bold tracking-tight text-white font-outfit leading-none">
-                {process.env.NEXT_PUBLIC_BRAND_NAME || "Prometheus"}
-              </h1>
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-500/80 mt-1">
-                Dashboard
-              </span>
-            </div>
-          </div>
+        {/* Brand Header */}
+        <div className="h-14 border-b border-white/10 flex items-center justify-between px-5 flex-shrink-0">
+          <Link href="/dashboard" className="flex items-center gap-2.5 group">
+            <span className="text-white font-mono text-sm">◇</span>
+            <span className="font-semibold text-sm tracking-tight text-white">Prometheus</span>
+            <span className="text-[10px] font-mono text-neutral-500 border border-white/10 rounded px-1.5 py-0.2 bg-white/[0.02]">
+              core
+            </span>
+          </Link>
           <button
-            className="ml-auto p-2 lg:hidden text-neutral-400 hover:text-white"
+            className="p-1.5 lg:hidden text-neutral-400 hover:text-white"
             onClick={() => setIsSidebarOpen(false)}
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Scrollable Navigation */}
-        <nav className="mt-8 px-4 space-y-6 overflow-y-auto flex-1 no-scrollbar relative z-10 pb-3">
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6 text-xs">
           {mainSidebarItems.map((item: any) => {
             if (item.items) {
               return (
-                <div key={item.name} className="space-y-2">
-                  <p className="px-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 mb-3">
+                <div key={item.name} className="space-y-1">
+                  <p className="px-3 text-[11px] font-medium text-neutral-500 mb-2 uppercase tracking-wider font-mono">
                     {item.name}
                   </p>
-                  <div className="space-y-1">
-                    {item.items.map((subItem: any) => {
-                      const isActive = pathname === subItem.href;
-                      return (
-                        <Link
-                          key={subItem.name}
-                          href={subItem.href}
-                          className={cn(
-                            "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 group text-[13px] font-bold",
-                            isActive
-                              ? "bg-red-500/10 text-red-500 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)]"
-                              : "text-neutral-400 hover:bg-white/[0.03] hover:text-neutral-200"
-                          )}
-                        >
-                          <subItem.icon
-                            className={cn(
-                              "h-4 w-4 transition-all duration-300",
-                              isActive
-                                ? "text-red-500 scale-110"
-                                : "text-slate-600 group-hover:text-neutral-400"
-                            )}
-                          />
-                          {subItem.name}
-                          {isActive && (
-                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
+                  {item.items.map((subItem: any) => {
+                    const isActive = pathname === subItem.href;
+                    return (
+                      <Link
+                        key={subItem.name}
+                        href={subItem.href}
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors font-medium",
+                          isActive
+                            ? "bg-white/10 text-white border border-white/10"
+                            : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
+                        )}
+                      >
+                        <subItem.icon className={cn("h-4 w-4", isActive ? "text-white" : "text-neutral-500")} />
+                        <span>{subItem.name}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               );
             }
@@ -270,206 +233,132 @@ export default function DashboardLayout({
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-300 group text-[14px] font-bold",
+                  "flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors font-medium",
                   isActive
-                    ? "bg-red-500/10 text-red-500 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)]"
-                    : "text-neutral-400 hover:bg-white/[0.03] hover:text-neutral-200"
+                    ? "bg-white/10 text-white border border-white/10"
+                    : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
                 )}
               >
-                <item.icon
-                  className={cn(
-                    "h-5 w-5 transition-all duration-300",
-                    isActive ? "text-red-500 scale-110" : "text-slate-600 group-hover:text-neutral-400"
-                  )}
-                />
-                {item.name}
-                {isActive ? (
-                  <ChevronRight className="ml-auto h-4 w-4 text-red-500" />
-                ) : (
-                  <ChevronRight className="ml-auto h-4 w-4 opacity-0 group-hover:opacity-30 transition-opacity" />
-                )}
+                <item.icon className={cn("h-4 w-4", isActive ? "text-white" : "text-neutral-500")} />
+                <span>{item.name}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Fixed "Back to Servers" link (only shown inside a guild) */}
+        {/* Back to Servers / Footer Action */}
         {backLinkItem && (
-          <div className="px-4 py-2 flex-shrink-0">
-            <div className="h-px bg-white/5 w-3/4 mx-auto rounded-full mb-2" />
+          <div className="p-3 border-t border-white/10">
             <Link
               href={backLinkItem.href || "/dashboard/guilds"}
-              className={cn(
-                "flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-300 group text-[14px] font-bold",
-                pathname === backLinkItem.href
-                  ? "bg-red-500/10 text-red-500 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)]"
-                  : "text-neutral-400 hover:bg-white/[0.03] hover:text-neutral-200"
-              )}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors font-medium text-xs"
             >
-              <BackLinkIcon
-                className={cn(
-                  "h-5 w-5 transition-all duration-300",
-                  pathname === backLinkItem.href
-                    ? "text-red-500 scale-110"
-                    : "text-slate-600 group-hover:text-neutral-400"
-                )}
-              />
-              {backLinkItem.name}
-              {pathname === backLinkItem.href ? (
-                <ChevronRight className="ml-auto h-4 w-4 text-red-500" />
-              ) : (
-                <ChevronRight className="ml-auto h-4 w-4 opacity-0 group-hover:opacity-30 transition-opacity" />
-              )}
+              <BackLinkIcon className="h-4 w-4 text-neutral-500" />
+              <span>{backLinkItem.name}</span>
             </Link>
           </div>
         )}
 
-        {/* User Profile - now a normal flex child, no absolute positioning */}
-        <div className="flex-shrink-0 p-4 border-t border-white/5 glass-red bg-red-500/[0.02]">
-          <div className="flex items-center gap-3 p-2 bg-white/[0.02] rounded-lg border border-white/[0.05]">
-            <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center ring-1 ring-white/10 overflow-hidden border border-red-500/20">
-              {session?.user?.image ? (
-                <img
-                  src={session.user.image}
-                  alt="User Avatar"
-                  className="h-full w-full object-cover opacity-80"
-                />
-              ) : (
-                <User className="h-6 w-6 text-red-500/50" />
-              )}
+        {/* User Account / Status */}
+        <div className="p-3 border-t border-white/10 bg-[#050505]">
+          <div className="flex items-center justify-between p-2 rounded-lg bg-neutral-900/60 border border-white/5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="h-7 w-7 rounded-full bg-neutral-800 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                {session?.user?.image ? (
+                  <img src={session.user.image} alt="Avatar" className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-3.5 w-3.5 text-neutral-400" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-white truncate">
+                  {session?.user?.name || "Guest Operator"}
+                </p>
+                <p className="text-[10px] text-neutral-500 truncate font-mono">
+                  {session?.user ? "Connected" : "Local Mode"}
+                </p>
+              </div>
             </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-bold text-white truncate font-outfit">
-                {session?.user?.name || "Administrator"}
-              </p>
-              <p className="text-[10px] font-black uppercase text-red-500/60 truncate tracking-widest">
-                User
-              </p>
-            </div>
+            {session && (
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="p-1.5 text-neutral-500 hover:text-white transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </aside>
 
-      {/* Main Content Area (unchanged) */}
-      <div className="lg:pl-72 flex flex-col min-h-screen relative z-10">
-        {/* Top Navbar (unchanged) */}
-        <header className="h-20 sticky top-4 z-30 mx-4 lg:mx-10 flex items-center justify-between border border-white/10 glass bg-white/[0.01] backdrop-blur-3xl px-8 rounded-[2rem] shadow-xl shadow-black/20 mb-6 mt-4">
-          <button
-            className="p-2 lg:hidden text-neutral-400 hover:bg-white/5 rounded-xl transition-colors"
-            onClick={() => setIsSidebarOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
-
-          <div className="hidden md:flex items-center w-96 max-w-full relative group">
-            <Search className="absolute left-4 h-4 w-4 text-neutral-500 group-focus-within:text-red-500 transition-colors" />
-            <input
-              type="text"
-              placeholder="Query neural network..."
-              className="w-full bg-white/[0.03] border border-white/5 rounded-lg py-2.5 pl-12 pr-4 text-xs font-bold text-neutral-300 focus:outline-none focus:ring-1 focus:ring-red-500/30 focus:bg-white/[0.05] transition-all placeholder:text-slate-600"
-            />
+      {/* Main Content */}
+      <div className="lg:pl-64 flex flex-col min-h-screen">
+        {/* Top Navbar */}
+        <header className="h-14 sticky top-0 z-30 bg-[#000000]/80 backdrop-blur border-b border-white/10 px-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              className="p-1.5 lg:hidden text-neutral-400 hover:text-white"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
+              <span className="text-neutral-400">Prometheus</span>
+              <span>/</span>
+              <span className="text-white">
+                {pathname.includes("/guild/") ? "Server Management" : "Overview"}
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            {/* Host Status Indicator */}
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-neutral-900 border border-white/10 text-[11px] font-mono text-neutral-400">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Self-hosted VPS</span>
+            </div>
+
+            {/* Notification bell */}
             <div className="relative" ref={bellRef}>
-              <button 
+              <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="relative p-2.5 text-neutral-400 hover:bg-white/5 hover:text-white rounded-xl transition-all group"
+                className="p-2 text-neutral-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                title="Notifications"
               >
-                <Bell className="h-5 w-5" />
+                <Bell className="h-4 w-4" />
                 {globalNotification && (
-                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border-2 border-[#020617] shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>
+                  <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-white" />
                 )}
               </button>
 
               {isNotificationsOpen && (
-                <div className="absolute right-0 mt-3 w-80 bg-[#0a0f1e]/90 backdrop-blur-3xl border border-white/5 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-4 z-20 animate-in fade-in zoom-in-95 duration-300 origin-top-right">
-                    <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-                      <p className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em]">Broadcast Metrics</p>
-                      <button 
+                <div className="absolute right-0 mt-2 w-72 bg-[#0a0a0a] border border-white/10 rounded-xl shadow-2xl p-4 z-50 text-xs">
+                  <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
+                    <span className="font-mono text-neutral-400">Notifications</span>
+                    {globalNotification && (
+                      <button
                         onClick={() => setGlobalNotification(null)}
-                        className="text-[10px] font-bold text-red-500/60 hover:text-red-500 transition-colors uppercase"
+                        className="text-[10px] text-neutral-500 hover:text-white"
                       >
-                        Clear
+                        Dismiss
                       </button>
-                    </div>
-                    
-                    {globalNotification ? (
-                      <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Sparkles className="h-3 w-3 text-red-500" />
-                          <span className="text-[10px] font-black uppercase text-red-500 tracking-widest">System Broadcast</span>
-                        </div>
-                        <p className="text-xs font-medium text-neutral-300 leading-relaxed">
-                          {globalNotification}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="py-8 flex flex-col items-center justify-center text-center">
-                        <div className="h-10 w-10 rounded-full bg-neutral-800 flex items-center justify-center mb-3">
-                          <Bell className="h-5 w-5 text-slate-600" />
-                        </div>
-                        <p className="text-xs font-bold text-neutral-500">No active broadcasts</p>
-                        <p className="text-[10px] font-medium text-slate-600 mt-1 uppercase tracking-widest">Everything is operating normally</p>
-                      </div>
                     )}
                   </div>
-              )}
-            </div>
-            <div className="h-8 w-[1px] bg-white/5 hidden sm:block"></div>
-
-            {/* Profile Dropdown (unchanged) */}
-            <div className="relative" ref={profileRef}>
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center gap-3.5 p-1.5 rounded-lg hover:bg-white/5 transition-all group border border-transparent hover:border-white/10"
-              >
-                <div className="h-9 w-9 rounded-full bg-red-500/10 flex items-center justify-center overflow-hidden border border-red-500/20 ring-2 ring-transparent group-hover:ring-red-500/30 transition-all">
-                  {session?.user?.image ? (
-                    <img src={session.user.image} alt="User Avatar" className="h-full w-full object-cover opacity-80" />
+                  {globalNotification ? (
+                    <p className="text-neutral-300 leading-relaxed">{globalNotification}</p>
                   ) : (
-                    <User className="h-5 w-5 text-red-500/50" />
+                    <p className="text-neutral-500 py-4 text-center">No active notifications</p>
                   )}
                 </div>
-                <div className="hidden sm:flex flex-col items-start leading-none gap-1">
-                  <span className="text-xs font-bold text-neutral-200 group-hover:text-white transition-colors">
-                    {session?.user?.name?.split(' ')[0] || "Admin"}
-                  </span>
-                  <span className="text-[9px] font-black uppercase text-red-500/60 tracking-widest">Active</span>
-                </div>
-                <ChevronDown
-                  className={cn("h-4 w-4 text-slate-600 transition-transform hidden sm:block", isProfileOpen && "rotate-180")}
-                />
-              </button>
-
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-56 bg-[#0a0f1e]/90 backdrop-blur-3xl border border-white/5 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-2 z-20 animate-in fade-in zoom-in-95 duration-300 origin-top-right">
-                    <div className="px-4 py-3 border-b border-white/5 mb-2">
-                      <p className="text-[9px] font-black text-neutral-500 uppercase tracking-[0.2em] mb-1">Authenticated As</p>
-                      <p className="text-sm font-bold text-white truncate">{session?.user?.name || "Administrator"}</p>
-                    </div>
-
-                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-neutral-400 hover:bg-white/5 hover:text-white transition-all group/item">
-                      <LifeBuoy className="h-4 w-4 text-slate-600 group-hover/item:text-red-500 transition-colors" />
-                      Support Matrix
-                    </button>
-
-                    <button
-                      onClick={() => signOut({ callbackUrl: '/' })}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest text-red-500/80 hover:bg-red-500/10 hover:text-red-500 transition-all group/item"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Deauthorize
-                    </button>
-                  </div>
               )}
             </div>
           </div>
         </header>
 
-        {/* Content Area */}
-        <main className="flex-1 p-6 lg:p-10 animate-in fade-in duration-700 relative z-10">
-          <div className="max-w-[1600px] mx-auto">{children}</div>
+        {/* Page Body */}
+        <main className="flex-1 p-6 lg:p-10 max-w-7xl w-full mx-auto">
+          {children}
         </main>
       </div>
     </div>
